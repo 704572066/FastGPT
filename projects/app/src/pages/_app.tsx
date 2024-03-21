@@ -45,27 +45,32 @@ function App({ Component, pageProps }: AppProps) {
 
   useEffect(() => {
     // get init data
+
     (async () => {
-      const {
-        feConfigs: { scripts, isPlus, show_git, systemTitle }
-      } = await clientInitData();
+      try {
+        const {
+          feConfigs: { scripts, isPlus, show_git, systemTitle }
+        } = await clientInitData();
 
-      setTitle(systemTitle || 'FastGPT');
+        setTitle(systemTitle || 'FastGPT');
 
-      // log fastgpt
-      if (!isPlus) {
-        console.log(
-          '%cWelcome to FastGPT',
-          'font-family:Arial; color:#3370ff ; font-size:18px; font-weight:bold;',
-          `GitHub：https://github.com/labring/FastGPT`
-        );
+        // log fastgpt
+        if (!isPlus) {
+          console.log(
+            '%cWelcome to FastGPT',
+            'font-family:Arial; color:#3370ff ; font-size:18px; font-weight:bold;',
+            `GitHub：https://github.com/labring/FastGPT`
+          );
+        }
+        if (show_git) {
+          loadGitStar();
+        }
+
+        setScripts(scripts || []);
+        setInitd();
+      } catch {
+        console.error('clientInitData did not return a valid obiect with feconfigs');
       }
-      if (show_git) {
-        loadGitStar();
-      }
-
-      setScripts(scripts || []);
-      setInitd();
     })();
 
     // add window error track

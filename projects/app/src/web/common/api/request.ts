@@ -7,6 +7,7 @@ import axios, {
 import { clearToken, getToken } from '@/web/support/user/auth';
 import { TOKEN_ERROR_CODE } from '@fastgpt/global/common/error/errorCode';
 
+// AbortController 是一个在现代浏览器中内置的 API，用于取消任何正在进行的请求。Axios 提供了一个 signal 选项来使用 AbortController API
 interface ConfigType {
   headers?: { [key: string]: string };
   timeout?: number;
@@ -164,6 +165,7 @@ function request(
  * @param {Object} config
  * @returns
  */
+// 定义一个泛型T并且默认它为undefined。当你不提供T时，它会默认使用undefined。这允许你创建一个可选的泛型类型，其默认值为undefined。
 export function GET<T = undefined>(url: string, params = {}, config: ConfigType = {}): Promise<T> {
   return request(url, params, config, 'GET');
 }

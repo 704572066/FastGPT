@@ -1,4 +1,8 @@
+// Zustand是一个用于管理状态的现代React状态库。它提供了简洁、可扩展和高效的状态管理解决方案，
+// 使得在React应用中处理复杂的状态逻辑变得更加容易和直观。
 import { create } from 'zustand';
+// devtools 中间件函数可以将 zustand 状态管理器与浏览器开发者工具集成起来，在开发过程中更方便地调试和监控状态。
+// persist 中间件函数可以将状态持久化到本地存储中，当页面刷新或者重新加载时，状态依然可以被保留下来。
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import type { UserUpdateParams } from '@/types/user';
@@ -16,7 +20,9 @@ type State = {
   teamPlanStatus: FeTeamPlanStatusType | null;
   initTeamPlanStatus: () => Promise<any>;
 };
-
+// 给 store 添加 TS 类型时时，我们要在传入泛型的后面加一个()
+// 在使用 zustand 时，是无法直接访问 state 中数据的，只能通过 zustand 给我们提供的 set 、 get 方法来访问 state状态。
+// 所以，如果需要再 set 方法外访问 state，那我们需要使用 get 方法。
 export const useUserStore = create<State>()(
   devtools(
     persist(

@@ -5,6 +5,7 @@ import Head from 'next/head';
 import { ChakraProvider, ColorModeScript } from '@chakra-ui/react';
 import Layout from '@/components/Layout';
 import { theme } from '@fastgpt/web/styles/theme';
+// React-Query 来管理接口请求的数据
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import NProgress from 'nprogress'; //nprogress module
 import Router from 'next/router';

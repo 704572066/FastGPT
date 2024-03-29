@@ -38,13 +38,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
 const defaultFeConfigs: FastGPTFeConfigsType = {
   show_emptyChat: true,
-  show_git: true,
+  // show_git: true,
   show_register: true,
-  docUrl: 'https://doc.fastgpt.in',
-  openAPIDocUrl: 'https://doc.fastgpt.in/docs/development/openapi',
-  systemTitle: 'FastGPT',
-  concatMd:
-    '* 项目开源地址: [FastGPT GitHub](https://github.com/labring/FastGPT)\n* 交流群: ![](https://doc.fastgpt.in/wechat-fastgpt.webp)',
+  // docUrl: 'https://doc.fastgpt.in',
+  // openAPIDocUrl: 'https://doc.fastgpt.in/docs/development/openapi',
+  systemTitle: 'GPT',
+  concatMd: 'gujie',
   limit: {
     exportDatasetLimitMinutes: 0,
     websiteSyncLimitMinuted: 0

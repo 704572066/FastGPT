@@ -53,7 +53,7 @@ const UpdateInviteModal = () => {
 
   return (
     <MyModal
-      isOpen={inviteList && inviteList.length > 0}
+      isOpen={inviteList && inviteList.length > 1}
       iconSrc="/imgs/modal/team.svg"
       title={
         <Box>

@@ -40,6 +40,7 @@ const defaultFeConfigs: FastGPTFeConfigsType = {
   show_emptyChat: true,
   // show_git: true,
   show_register: true,
+  show_team_chat: true,
   // docUrl: 'https://doc.fastgpt.in',
   // openAPIDocUrl: 'https://doc.fastgpt.in/docs/development/openapi',
   systemTitle: 'GPT',

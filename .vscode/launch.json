@@ -30,6 +30,11 @@
       "request": "launch",
       "url": "http://localhost:3000",
       "webRoot": "${workspaceFolder}/projects/app",
+      "sourceMaps": true,
+      "sourceMapPathOverrides": {
+        "webpack:///./src/*": "${webRoot}/dist/*",
+        "webpack:///src/*": "${webRoot}/dist/*"
+      }
     },
     {
       "name": "Next.js: debug full stack",

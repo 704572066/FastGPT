@@ -20,7 +20,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // const { teamId, tmbId, isOwner } = await authApp({ req, authToken: true, status, per: 'w' });
     const teamMembers = await MongoTeamMember.find({
-      status
+      status,
+      userId
       // ...(isOwner ? { teamId } : { tmbId })
     })
       .sort({

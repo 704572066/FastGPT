@@ -29,12 +29,12 @@
       "type": "chrome",
       "request": "launch",
       "url": "http://localhost:3000",
-      "webRoot": "${workspaceFolder}/projects/app",
-      "sourceMaps": true,
-      "sourceMapPathOverrides": {
-        "webpack:///./src/*": "${webRoot}/dist/*",
-        "webpack:///src/*": "${webRoot}/dist/*"
-      }
+      "webRoot": "${workspaceFolder}/projects/app"
+      // "webRoot": "${workspaceFolder}",
+      // "sourceMaps": true,
+      // "sourceMapPathOverrides": {
+      //   "webpack://_N_E/*": "${webRoot}/*"
+      // }
     },
     {
       "name": "Next.js: debug full stack",

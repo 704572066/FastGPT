@@ -24,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await connectToDatabase();
 
     const { teamId, usernames, role } = req.body as InviteMemberProps;
-    console.log(req.query);
+    // console.log(req.query);
     const { userId, canWrite } = await authCert({ req, authToken: true });
 
     // const { teamId, tmbId, isOwner } = await authApp({ req, authToken: true, status, per: 'w' });

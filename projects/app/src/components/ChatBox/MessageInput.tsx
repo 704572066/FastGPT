@@ -1,108 +1,90 @@
 import { useSpeech } from '@/web/common/hooks/useSpeech';
 import { useSystemStore } from '@/web/common/system/useSystemStore';
 import { Box, Flex, Image, Spinner, Textarea } from '@chakra-ui/react';
-import React, { useRef, useEffect, useCallback, useState, useTransition } from 'react';
+import React, { useRef, useEffect, useCallback, useTransition } from 'react';
 import { useTranslation } from 'next-i18next';
 import MyTooltip from '../MyTooltip';
 import MyIcon from '@fastgpt/web/components/common/Icon';
-import { useRouter } from 'next/router';
 import { useSelectFile } from '@/web/common/file/hooks/useSelectFile';
 import { compressImgFileAndUpload } from '@/web/common/file/controller';
 import { customAlphabet } from 'nanoid';
-import { IMG_BLOCK_KEY } from '@fastgpt/global/core/chat/constants';
+import { ChatFileTypeEnum } from '@fastgpt/global/core/chat/constants';
 import { addDays } from 'date-fns';
-import { useRequest } from '@/web/common/hooks/useRequest';
+import { useRequest } from '@fastgpt/web/hooks/useRequest';
 import { MongoImageTypeEnum } from '@fastgpt/global/common/file/image/constants';
-import { OutLinkChatAuthProps } from '@fastgpt/global/support/permission/chat';
+import { ChatBoxInputFormType, ChatBoxInputType, UserInputFileItemType } from './type';
+import { textareaMinH } from './constants';
+import { UseFormReturn, useFieldArray } from 'react-hook-form';
+import { useChatProviderStore } from './Provider';
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz1234567890', 6);
 
-enum FileTypeEnum {
-  image = 'image',
-  file = 'file'
-}
-type FileItemType = {
-  id: string;
-  rawFile: File;
-  type: `${FileTypeEnum}`;
-  name: string;
-  icon: string; // img is base64
-  src?: string;
-};
-
 const MessageInput = ({
-  onChange,
   onSendMessage,
   onStop,
-  isChatting,
   TextareaDom,
   showFileSelector = false,
   resetInputVal,
-  shareId,
-  outLinkUid,
-  teamId,
-  teamToken
-}: OutLinkChatAuthProps & {
-  onChange?: (e: string) => void;
-  onSendMessage: (e: string) => void;
+  chatForm,
+  appId
+}: {
+  onSendMessage: (val: ChatBoxInputType & { autoTTSResponse?: boolean }) => void;
   onStop: () => void;
-  isChatting: boolean;
   showFileSelector?: boolean;
   TextareaDom: React.MutableRefObject<HTMLTextAreaElement | null>;
-  resetInputVal: (val: string) => void;
+  resetInputVal: (val: ChatBoxInputType) => void;
+  chatForm: UseFormReturn<ChatBoxInputFormType>;
+  appId?: string;
 }) => {
-  const [, startSts] = useTransition();
-
+  const { setValue, watch, control } = chatForm;
+  const inputValue = watch('input');
   const {
-    isSpeaking,
-    isTransCription,
-    stopSpeak,
-    startSpeak,
-    speakingTimeString,
-    renderAudioGraph,
-    stream
-  } = useSpeech({ shareId, outLinkUid, teamId, teamToken });
-  const { isPc } = useSystemStore();
+    update: updateFile,
+    remove: removeFile,
+    fields: fileList,
+    append: appendFile,
+    replace: replaceFile
+  } = useFieldArray({
+    control,
+    name: 'files'
+  });
+
+  const { shareId, outLinkUid, teamId, teamToken, isChatting, whisperConfig, autoTTSResponse } =
+    useChatProviderStore();
+  const { isPc, whisperModel } = useSystemStore();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { t } = useTranslation();
-  const textareaMinH = '22px';
-  const [fileList, setFileList] = useState<FileItemType[]>([]);
-  const havInput = !!TextareaDom.current?.value || fileList.length > 0;
 
+  const havInput = !!inputValue || fileList.length > 0;
+
+  /* file selector and upload */
   const { File, onOpen: onOpenSelectFile } = useSelectFile({
     fileType: 'image/*',
     multiple: true,
     maxCount: 10
   });
-
   const { mutate: uploadFile } = useRequest({
-    mutationFn: async (file: FileItemType) => {
-      if (file.type === FileTypeEnum.image) {
+    mutationFn: async ({ file, fileIndex }: { file: UserInputFileItemType; fileIndex: number }) => {
+      if (file.type === ChatFileTypeEnum.image && file.rawFile) {
         try {
-          const src = await compressImgFileAndUpload({
+          const url = await compressImgFileAndUpload({
             type: MongoImageTypeEnum.chatImage,
             file: file.rawFile,
             maxW: 4329,
             maxH: 4329,
             maxSize: 1024 * 1024 * 5,
-            // 30 day expired.
+            // 7 day expired.
             expiredTime: addDays(new Date(), 7),
             shareId,
             outLinkUid,
             teamId,
             teamToken
           });
-          setFileList((state) =>
-            state.map((item) =>
-              item.id === file.id
-                ? {
-                    ...item,
-                    src: `${location.origin}${src}`
-                  }
-                : item
-            )
-          );
+          updateFile(fileIndex, {
+            ...file,
+            url: `${location.origin}${url}`
+          });
         } catch (error) {
-          setFileList((state) => state.filter((item) => item.id !== file.id));
+          removeFile(fileIndex);
           console.log(error);
           return Promise.reject(error);
         }
@@ -110,7 +92,6 @@ const MessageInput = ({
     },
     errorToast: t('common.Upload File Failed')
   });
-
   const onSelectFile = useCallback(
     async (files: File[]) => {
       if (!files || files.length === 0) {
@@ -119,7 +100,7 @@ const MessageInput = ({
       const loadFiles = await Promise.all(
         files.map(
           (file) =>
-            new Promise<FileItemType>((resolve, reject) => {
+            new Promise<UserInputFileItemType>((resolve, reject) => {
               if (file.type.includes('image')) {
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
@@ -127,11 +108,10 @@ const MessageInput = ({
                   const item = {
                     id: nanoid(),
                     rawFile: file,
-                    type: FileTypeEnum.image,
+                    type: ChatFileTypeEnum.image,
                     name: file.name,
                     icon: reader.result as string
                   };
-                  uploadFile(item);
                   resolve(item);
                 };
                 reader.onerror = () => {
@@ -141,7 +121,7 @@ const MessageInput = ({
                 resolve({
                   id: nanoid(),
                   rawFile: file,
-                  type: FileTypeEnum.file,
+                  type: ChatFileTypeEnum.file,
                   name: file.name,
                   icon: 'file/pdf'
                 });
@@ -149,30 +129,39 @@ const MessageInput = ({
             })
         )
       );
+      appendFile(loadFiles);
 
-      setFileList((state) => [...state, ...loadFiles]);
+      loadFiles.forEach((file, i) =>
+        uploadFile({
+          file,
+          fileIndex: i + fileList.length
+        })
+      );
     },
-    [uploadFile]
+    [appendFile, fileList.length, uploadFile]
   );
 
+  /* on send */
   const handleSend = useCallback(async () => {
     const textareaValue = TextareaDom.current?.value || '';
 
-    const images = fileList.filter((item) => item.type === FileTypeEnum.image);
-    const imagesText =
-      images.length === 0
-        ? ''
-        : `\`\`\`${IMG_BLOCK_KEY}
-${images.map((img) => JSON.stringify({ src: img.src })).join('\n')}
-\`\`\`
-`;
+    onSendMessage({
+      text: textareaValue.trim(),
+      files: fileList
+    });
+    replaceFile([]);
+  }, [TextareaDom, fileList, onSendMessage, replaceFile]);
 
-    const inputMessage = `${imagesText}${textareaValue}`;
-
-    onSendMessage(inputMessage);
-    setFileList([]);
-  }, [TextareaDom, fileList, onSendMessage]);
-
+  /* whisper init */
+  const {
+    isSpeaking,
+    isTransCription,
+    stopSpeak,
+    startSpeak,
+    speakingTimeString,
+    renderAudioGraph,
+    stream
+  } = useSpeech({ appId, shareId, outLinkUid, teamId, teamToken });
   useEffect(() => {
     if (!stream) {
       return;
@@ -190,6 +179,28 @@ ${images.map((img) => JSON.stringify({ src: img.src })).join('\n')}
     };
     renderCurve();
   }, [renderAudioGraph, stream]);
+  const finishWhisperTranscription = useCallback(
+    (text: string) => {
+      if (!text) return;
+      if (whisperConfig?.autoSend) {
+        onSendMessage({
+          text,
+          files: fileList,
+          autoTTSResponse
+        });
+        replaceFile([]);
+      } else {
+        resetInputVal({ text });
+      }
+    },
+    [autoTTSResponse, fileList, onSendMessage, replaceFile, resetInputVal, whisperConfig?.autoSend]
+  );
+  const onWhisperRecord = useCallback(() => {
+    if (isSpeaking) {
+      return stopSpeak();
+    }
+    startSpeak(finishWhisperTranscription);
+  }, [finishWhisperTranscription, isSpeaking, startSpeak, stopSpeak]);
 
   return (
     <Box m={['0 auto', '10px auto']} w={'100%'} maxW={['auto', 'min(800px, 100%)']} px={[0, 5]}>
@@ -231,7 +242,7 @@ ${images.map((img) => JSON.stringify({ src: img.src })).join('\n')}
 
         {/* file preview */}
         <Flex wrap={'wrap'} px={[2, 4]} userSelect={'none'}>
-          {fileList.map((item) => (
+          {fileList.map((item, index) => (
             <Box
               key={item.id}
               border={'1px solid rgba(0,0,0,0.12)'}
@@ -240,11 +251,11 @@ ${images.map((img) => JSON.stringify({ src: img.src })).join('\n')}
               rounded={'md'}
               position={'relative'}
               _hover={{
-                '.close-icon': { display: item.src ? 'block' : 'none' }
+                '.close-icon': { display: item.url ? 'block' : 'none' }
               }}
             >
               {/* uploading */}
-              {!item.src && (
+              {!item.url && (
                 <Flex
                   position={'absolute'}
                   alignItems={'center'}
@@ -272,12 +283,12 @@ ${images.map((img) => JSON.stringify({ src: img.src })).join('\n')}
                 right={'-8px'}
                 top={'-8px'}
                 onClick={() => {
-                  setFileList((state) => state.filter((file) => file.id !== item.id));
+                  removeFile(index);
                 }}
                 className="close-icon"
                 display={['', 'none']}
               />
-              {item.type === FileTypeEnum.image && (
+              {item.type === ChatFileTypeEnum.image && (
                 <Image
                   alt={'img'}
                   src={item.icon}
@@ -335,14 +346,12 @@ ${images.map((img) => JSON.stringify({ src: img.src })).join('\n')}
             boxShadow={'none !important'}
             color={'myGray.900'}
             isDisabled={isSpeaking}
+            value={inputValue}
             onChange={(e) => {
               const textarea = e.target;
               textarea.style.height = textareaMinH;
               textarea.style.height = `${textarea.scrollHeight}px`;
-
-              startSts(() => {
-                onChange?.(textarea.value);
-              });
+              setValue('input', textarea.value);
             }}
             onKeyDown={(e) => {
               // enter send.(pc or iframe && enter and unPress shift)
@@ -381,7 +390,7 @@ ${images.map((img) => JSON.stringify({ src: img.src })).join('\n')}
             bottom={['10px', '12px']}
           >
             {/* voice-input */}
-            {!shareId && !havInput && !isChatting && (
+            {whisperConfig.open && !havInput && !isChatting && !!whisperModel && (
               <>
                 <canvas
                   ref={canvasRef}
@@ -392,37 +401,54 @@ ${images.map((img) => JSON.stringify({ src: img.src })).join('\n')}
                     zIndex: 0
                   }}
                 />
-                <Flex
-                  mr={2}
-                  alignItems={'center'}
-                  justifyContent={'center'}
-                  flexShrink={0}
-                  h={['26px', '32px']}
-                  w={['26px', '32px']}
-                  borderRadius={'md'}
-                  cursor={'pointer'}
-                  _hover={{ bg: '#F5F5F8' }}
-                  onClick={() => {
-                    if (isSpeaking) {
-                      return stopSpeak();
-                    }
-                    startSpeak(resetInputVal);
-                  }}
-                >
-                  <MyTooltip label={isSpeaking ? t('core.chat.Stop Speak') : t('core.chat.Record')}>
+                {isSpeaking && (
+                  <MyTooltip label={t('core.chat.Cancel Speak')}>
+                    <Flex
+                      mr={2}
+                      alignItems={'center'}
+                      justifyContent={'center'}
+                      flexShrink={0}
+                      h={['26px', '32px']}
+                      w={['26px', '32px']}
+                      borderRadius={'md'}
+                      cursor={'pointer'}
+                      _hover={{ bg: '#F5F5F8' }}
+                      onClick={() => stopSpeak(true)}
+                    >
+                      <MyIcon
+                        name={'core/chat/cancelSpeak'}
+                        width={['20px', '22px']}
+                        height={['20px', '22px']}
+                      />
+                    </Flex>
+                  </MyTooltip>
+                )}
+                <MyTooltip label={isSpeaking ? t('core.chat.Finish Speak') : t('core.chat.Record')}>
+                  <Flex
+                    mr={2}
+                    alignItems={'center'}
+                    justifyContent={'center'}
+                    flexShrink={0}
+                    h={['26px', '32px']}
+                    w={['26px', '32px']}
+                    borderRadius={'md'}
+                    cursor={'pointer'}
+                    _hover={{ bg: '#F5F5F8' }}
+                    onClick={onWhisperRecord}
+                  >
                     <MyIcon
-                      name={isSpeaking ? 'core/chat/stopSpeechFill' : 'core/chat/recordFill'}
+                      name={isSpeaking ? 'core/chat/finishSpeak' : 'core/chat/recordFill'}
                       width={['20px', '22px']}
                       height={['20px', '22px']}
-                      color={'primary.500'}
+                      color={isSpeaking ? 'primary.500' : 'myGray.600'}
                     />
-                  </MyTooltip>
-                </Flex>
+                  </Flex>
+                </MyTooltip>
               </>
             )}
             {/* send and stop icon */}
             {isSpeaking ? (
-              <Box color={'#5A646E'} w={'36px'} textAlign={'right'}>
+              <Box color={'#5A646E'} w={'36px'} textAlign={'right'} whiteSpace={'nowrap'}>
                 {speakingTimeString}
               </Box>
             ) : (

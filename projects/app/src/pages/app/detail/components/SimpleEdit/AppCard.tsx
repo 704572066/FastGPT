@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Box, Flex, Button, IconButton } from '@chakra-ui/react';
 import { DragHandleIcon } from '@chakra-ui/icons';
-import { useRequest } from '@/web/common/hooks/useRequest';
-import { useConfirm } from '@/web/common/hooks/useConfirm';
+import { useRequest } from '@fastgpt/web/hooks/useRequest';
+import { useConfirm } from '@fastgpt/web/hooks/useConfirm';
 import { useRouter } from 'next/router';
 import { useToast } from '@fastgpt/web/hooks/useToast';
 import { AppSchema } from '@fastgpt/global/core/app/type.d';
@@ -27,7 +27,8 @@ const AppCard = ({ appId }: { appId: string }) => {
   const [TeamTagsSet, setTeamTagsSet] = useState<AppSchema>();
 
   const { openConfirm: openConfirmDel, ConfirmModal: ConfirmDelModal } = useConfirm({
-    content: t('app.Confirm Del App Tip')
+    content: t('app.Confirm Del App Tip'),
+    type: 'delete'
   });
 
   /* 点击删除 */

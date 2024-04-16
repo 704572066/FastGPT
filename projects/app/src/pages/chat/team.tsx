@@ -25,28 +25,34 @@ import { checkChatSupportSelectFileByChatModels } from '@/web/core/chat/utils';
 import { useChatStore } from '@/web/core/chat/storeChat';
 import { customAlphabet } from 'nanoid';
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz1234567890', 12);
-import ChatBox, { type ComponentRef, type StartChatFnProps } from '@/components/ChatBox';
+import ChatBox from '@/components/ChatBox';
+import type { ComponentRef, StartChatFnProps } from '@/components/ChatBox/type.d';
 import { streamFetch } from '@/web/common/api/fetch';
 import type { ChatHistoryItemType } from '@fastgpt/global/core/chat/type.d';
-import { chatContentReplaceBlock } from '@fastgpt/global/core/chat/utils';
+import { getChatTitleFromChatMessage } from '@fastgpt/global/core/chat/utils';
 import { ChatStatusEnum } from '@fastgpt/global/core/chat/constants';
 import { getErrText } from '@fastgpt/global/common/error/utils';
 import MyBox from '@/components/common/MyBox';
 import SliderApps from './components/SliderApps';
+import { GPTMessages2Chats } from '@fastgpt/global/core/chat/adapt';
 
-const OutLink = ({
-  teamId,
-  appId,
-  chatId,
-  teamToken
-}: {
-  teamId: string;
-  appId: string;
-  chatId: string;
-  teamToken: string;
-}) => {
+const OutLink = () => {
   const { t } = useTranslation();
   const router = useRouter();
+  const {
+    teamId = '',
+    appId = '',
+    chatId = '',
+    teamToken,
+    ...customVariables
+  } = router.query as {
+    teamId: string;
+    appId: string;
+    chatId: string;
+    teamToken: string;
+    [key: string]: string;
+  };
+
   const { toast } = useToast();
   const theme = useTheme();
   const { isPc } = useSystemStore();
@@ -76,7 +82,10 @@ const OutLink = ({
       const { responseText, responseData } = await streamFetch({
         data: {
           messages: prompts,
-          variables,
+          variables: {
+            ...customVariables,
+            ...variables
+          },
           appId,
           teamId,
           teamToken,
@@ -85,10 +94,8 @@ const OutLink = ({
         onMessage: generatingMessage,
         abortCtrl: controller
       });
-      const newTitle =
-        chatContentReplaceBlock(prompts[0].content).slice(0, 20) ||
-        prompts[1]?.value?.slice(0, 20) ||
-        t('core.chat.New Chat');
+
+      const newTitle = getChatTitleFromChatMessage(GPTMessages2Chats(prompts)[0]);
 
       // new chat
       if (completionChatId !== chatId) {
@@ -130,18 +137,7 @@ const OutLink = ({
 
       return { responseText, responseData, isNewChat: forbidRefresh.current };
     },
-    [
-      appId,
-      teamToken,
-      chatId,
-      histories,
-      pushHistory,
-      router,
-      setChatData,
-      teamId,
-      t,
-      updateHistory
-    ]
+    [appId, teamToken, chatId, histories, pushHistory, router, setChatData, teamId, updateHistory]
   );
 
   /* replace router query to last chat */
@@ -214,6 +210,7 @@ const OutLink = ({
 
       const history = res.history.map((item) => ({
         ...item,
+        dataId: item.dataId || nanoid(),
         status: ChatStatusEnum.finish
       }));
 
@@ -383,17 +380,8 @@ const OutLink = ({
 };
 
 export async function getServerSideProps(context: any) {
-  const teamId = context?.query?.teamId || '';
-  const appId = context?.query?.appId || '';
-  const chatId = context?.query?.chatId || '';
-  const teamToken: string = context?.query?.teamToken || '';
-
   return {
     props: {
-      teamId,
-      appId,
-      chatId,
-      teamToken,
       ...(await serviceSideProps(context))
     }
   };

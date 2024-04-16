@@ -21,15 +21,18 @@ import { ChatSourceMap } from '@fastgpt/global/core/chat/constants';
 import { HUMAN_ICON } from '@fastgpt/global/common/system/constants';
 import { AppLogsListItemType } from '@/types/app';
 import { useSystemStore } from '@/web/common/system/useSystemStore';
-import ChatBox, { type ComponentRef } from '@/components/ChatBox';
+import ChatBox from '@/components/ChatBox';
+import type { ComponentRef } from '@/components/ChatBox/type.d';
 import { useQuery } from '@tanstack/react-query';
 import { getInitChatInfo } from '@/web/core/chat/api';
 import Tag from '@/components/Tag';
-import MyModal from '@/components/MyModal';
+import MyModal from '@fastgpt/web/components/common/MyModal';
 import { addDays } from 'date-fns';
 import MyBox from '@/components/common/MyBox';
 import { usePagination } from '@fastgpt/web/hooks/usePagination';
 import DateRangePicker, { DateRangeType } from '@fastgpt/web/components/common/DateRangePicker';
+import { formatChatValue2InputType } from '@/components/ChatBox/utils';
+import { getNanoid } from '@fastgpt/global/common/string/tools';
 
 const Logs = ({ appId }: { appId: string }) => {
   const { t } = useTranslation();
@@ -232,6 +235,7 @@ const DetailLogsModal = ({
       onSuccess(res) {
         const history = res.history.map((item) => ({
           ...item,
+          dataId: item.dataId || getNanoid(),
           status: 'finish' as any
         }));
         ChatBoxRef.current?.resetHistory(history);
@@ -248,7 +252,8 @@ const DetailLogsModal = ({
   const history = useMemo(() => (chat?.history ? chat.history : []), [chat]);
 
   const title = useMemo(() => {
-    return history[history.length - 2]?.value?.slice(0, 8);
+    const { text } = formatChatValue2InputType(history[history.length - 2]?.value);
+    return text?.slice(0, 8);
   }, [history]);
 
   return (

@@ -5,7 +5,6 @@ import Head from 'next/head';
 import { ChakraProvider, ColorModeScript } from '@chakra-ui/react';
 import Layout from '@/components/Layout';
 import { theme } from '@fastgpt/web/styles/theme';
-// React-Query 来管理接口请求的数据
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import NProgress from 'nprogress'; //nprogress module
 import Router from 'next/router';
@@ -46,32 +45,27 @@ function App({ Component, pageProps }: AppProps) {
 
   useEffect(() => {
     // get init data
-
     (async () => {
-      try {
-        const {
-          feConfigs: { scripts, isPlus, show_git, systemTitle }
-        } = await clientInitData();
+      const {
+        feConfigs: { scripts, isPlus, show_git, systemTitle }
+      } = await clientInitData();
 
-        setTitle(systemTitle || 'FastGPT');
+      setTitle(systemTitle || 'FastGPT');
 
-        // log fastgpt
-        if (!isPlus) {
-          console.log(
-            '%cWelcome to FastGPT',
-            'font-family:Arial; color:#3370ff ; font-size:18px; font-weight:bold;',
-            `GitHub：https://github.com/labring/FastGPT`
-          );
-        }
-        if (show_git) {
-          loadGitStar();
-        }
-
-        setScripts(scripts || []);
-        setInitd();
-      } catch {
-        console.error('clientInitData did not return a valid obiect with feconfigs');
+      // log fastgpt
+      if (!isPlus) {
+        console.log(
+          '%cWelcome to FastGPT',
+          'font-family:Arial; color:#3370ff ; font-size:18px; font-weight:bold;',
+          `GitHub：https://github.com/labring/FastGPT`
+        );
       }
+      if (show_git) {
+        loadGitStar();
+      }
+
+      setScripts(scripts || []);
+      setInitd();
     })();
 
     // add window error track

@@ -30,11 +30,9 @@ export function initGlobal() {
   if (global.communityPlugins) return;
 
   global.communityPlugins = [];
-  global.simpleModeTemplates = [];
   global.qaQueueLen = global.qaQueueLen ?? 0;
   global.vectorQueueLen = global.vectorQueueLen ?? 0;
-  // init tikToken 字符串通过js-tiktoken变成token
+  // init tikToken
   getTikTokenEnc();
-  // 访问国外的接口通过使用tunnel创建一个HTTPS-over-HTTP tunnel配置代理
   initHttpAgent();
 }

@@ -73,6 +73,13 @@ export const DatasetCollectionSyncResultMap = {
 /* ------------ data -------------- */
 
 /* ------------ training -------------- */
+export enum ImportDataSourceEnum {
+  fileLocal = 'fileLocal',
+  fileLink = 'fileLink',
+  fileCustom = 'fileCustom',
+  csvTable = 'csvTable'
+}
+
 export enum TrainingModeEnum {
   chunk = 'chunk',
   auto = 'auto',
@@ -83,17 +90,17 @@ export const TrainingTypeMap = {
   [TrainingModeEnum.chunk]: {
     label: 'core.dataset.training.Chunk mode',
     tooltip: 'core.dataset.import.Chunk Split Tip',
-    isPlus: true
+    openSource: true
   },
   [TrainingModeEnum.auto]: {
     label: 'core.dataset.training.Auto mode',
     tooltip: 'core.dataset.training.Auto mode Tip',
-    isPlus: true
+    openSource: false
   },
   [TrainingModeEnum.qa]: {
     label: 'core.dataset.training.QA mode',
     tooltip: 'core.dataset.import.QA Import Tip',
-    isPlus: true
+    openSource: true
   }
 };
 
@@ -153,9 +160,6 @@ export const SearchScoreTypeMap = {
     showScore: false
   }
 };
-
-export const FolderIcon = 'file/fill/folder';
-export const FolderImgUrl = '/imgs/files/folder.svg';
 
 export const CustomCollectionIcon = 'common/linkBlue';
 export const LinkCollectionIcon = 'common/linkBlue';

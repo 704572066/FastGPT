@@ -9,7 +9,7 @@ weight: 404
 
 |                       |                       |
 | --------------------- | --------------------- |
-| ![](/imgs/demo-dalle1.png) | ![](/imgs/demo-dalle2.png) |
+| ![](/imgs/demo-dalle1.png) | ![](/imgs/demo-dalle2.webp) |
 
 ## OpenAI Dalle3 接口
 
@@ -88,7 +88,7 @@ Response:
 [
   {
     "moduleId": "userGuide",
-    "name": "core.module.template.User guide",
+    "name": "core.module.template.App system setting",
     "flowType": "userGuide",
     "position": {
       "x": 454.98510354678695,

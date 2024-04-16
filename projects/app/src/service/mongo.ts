@@ -21,23 +21,22 @@ export function connectToDatabase(): Promise<void> {
       initGlobal();
     },
     afterHook: async () => {
+      // init system config
+      getInitConfig();
+      //init vector database, init root user
+      await Promise.all([initVectorStore(), initRootUser()]);
+
       startMongoWatch();
       // cron
       startCron();
-      // init system config
-      getInitConfig();
 
-      // init vector database
-      await initVectorStore();
       // start queue
       startTrainingQueue(true);
-
-      initRootUser();
     }
   });
 }
 
-async function initRootUser() {
+async function initRootUser(retry = 3): Promise<any> {
   try {
     const rootUser = await MongoUser.findOne({
       username: 'root'
@@ -49,12 +48,9 @@ async function initRootUser() {
     await mongoSessionRun(async (session) => {
       // init root user
       if (rootUser) {
-        await MongoUser.findOneAndUpdate(
-          { username: 'root' },
-          {
-            password: hashStr(psw)
-          }
-        );
+        await rootUser.updateOne({
+          password: hashStr(psw)
+        });
       } else {
         const [{ _id }] = await MongoUser.create(
           [
@@ -76,7 +72,12 @@ async function initRootUser() {
       password: psw
     });
   } catch (error) {
-    console.log('init root user error', error);
-    exit(1);
+    if (retry > 0) {
+      console.log('retry init root user');
+      return initRootUser(retry - 1);
+    } else {
+      console.error('init root user error', error);
+      exit(1);
+    }
   }
 }

@@ -1,6 +1,7 @@
 export type LLMModelItemType = {
   model: string;
   name: string;
+  avatar?: string;
   maxContext: number;
   maxResponse: number;
   quoteMaxToken: number;
@@ -10,7 +11,13 @@ export type LLMModelItemType = {
 
   censor?: boolean;
   vision?: boolean;
-  datasetProcess?: boolean;
+
+  // diff function model
+  datasetProcess?: boolean; // dataset
+  usedInClassify?: boolean; // classify
+  usedInExtractFields?: boolean; // extract fields
+  usedInToolCall?: boolean; // tool call
+  usedInQueryExtension?: boolean; // query extension
 
   functionCall: boolean;
   toolChoice: boolean;
@@ -23,22 +30,25 @@ export type LLMModelItemType = {
 };
 
 export type VectorModelItemType = {
-  model: string;
-  name: string;
-  defaultToken: number;
-  charsPointsPrice: number;
-  maxToken: number;
-  weight: number;
-  hidden?: boolean;
-  defaultConfig?: Record<string, any>;
+  model: string; // model name
+  name: string; // show name
+  avatar?: string;
+  defaultToken: number; // split text default token
+  charsPointsPrice: number; // 1k tokens=n points
+  maxToken: number; // model max token
+  weight: number; // training weight
+  hidden?: boolean; // Disallow creation
+  defaultConfig?: Record<string, any>; // post request config
+  dbConfig?: Record<string, any>; // Custom parameters for storage
+  queryConfig?: Record<string, any>; // Custom parameters for query
 };
 
 export type ReRankModelItemType = {
   model: string;
   name: string;
   charsPointsPrice: number;
-  requestUrl?: string;
-  requestAuth?: string;
+  requestUrl: string;
+  requestAuth: string;
 };
 
 export type AudioSpeechModelType = {

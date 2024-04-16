@@ -5,7 +5,7 @@ import { DeleteIcon } from '@chakra-ui/icons';
 import { delDatasetById } from '@/web/core/dataset/api';
 import { useSelectFile } from '@/web/common/file/hooks/useSelectFile';
 import { useDatasetStore } from '@/web/core/dataset/store/dataset';
-import { useConfirm } from '@/web/common/hooks/useConfirm';
+import { useConfirm } from '@fastgpt/web/hooks/useConfirm';
 import { useForm } from 'react-hook-form';
 import { compressImgFileAndUpload } from '@/web/common/file/controller';
 import type { DatasetItemType } from '@fastgpt/global/core/dataset/type.d';
@@ -14,9 +14,10 @@ import MyTooltip from '@/components/MyTooltip';
 import { useTranslation } from 'next-i18next';
 import PermissionRadio from '@/components/support/permission/Radio';
 import { useSystemStore } from '@/web/common/system/useSystemStore';
-import { useRequest } from '@/web/common/hooks/useRequest';
+import { useRequest } from '@fastgpt/web/hooks/useRequest';
 import { MongoImageTypeEnum } from '@fastgpt/global/common/file/image/constants';
 import MySelect from '@fastgpt/web/components/common/MySelect';
+import AIModelSelector from '@/components/Select/AIModelSelector';
 
 const Info = ({ datasetId }: { datasetId: string }) => {
   const { t } = useTranslation();
@@ -137,7 +138,7 @@ const Info = ({ datasetId }: { datasetId: string }) => {
           {t('core.ai.model.Dataset Agent Model')}
         </Box>
         <Box flex={[1, '0 0 300px']}>
-          <MySelect
+          <AIModelSelector
             w={'100%'}
             value={getValues('agentModel').model}
             list={datasetModelList.map((item) => ({

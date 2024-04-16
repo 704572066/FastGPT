@@ -17,7 +17,8 @@ import {
   Th,
   Td,
   TableContainer,
-  Button
+  Button,
+  useDisclosure
 } from '@chakra-ui/react';
 import { ModuleInputKeyEnum } from '@fastgpt/global/core/module/constants';
 import { onChangeNode, useFlowProviderStore } from '../../../FlowProvider';
@@ -38,14 +39,56 @@ import { EditorVariablePickerType } from '@fastgpt/web/components/common/Textare
 import HttpInput from '@fastgpt/web/components/common/Input/HttpInput';
 import dynamic from 'next/dynamic';
 import MySelect from '@fastgpt/web/components/common/MySelect';
-const OpenApiImportModal = dynamic(() => import('./OpenApiImportModal'));
+import RenderToolInput from '../../render/RenderToolInput';
+const CurlImportModal = dynamic(() => import('./CurlImportModal'));
+
+export const HttpHeaders = [
+  { key: 'A-IM', label: 'A-IM' },
+  { key: 'Accept', label: 'Accept' },
+  { key: 'Accept-Charset', label: 'Accept-Charset' },
+  { key: 'Accept-Encoding', label: 'Accept-Encoding' },
+  { key: 'Accept-Language', label: 'Accept-Language' },
+  { key: 'Accept-Datetime', label: 'Accept-Datetime' },
+  { key: 'Access-Control-Request-Method', label: 'Access-Control-Request-Method' },
+  { key: 'Access-Control-Request-Headers', label: 'Access-Control-Request-Headers' },
+  { key: 'Authorization', label: 'Authorization' },
+  { key: 'Cache-Control', label: 'Cache-Control' },
+  { key: 'Connection', label: 'Connection' },
+  { key: 'Content-Length', label: 'Content-Length' },
+  { key: 'Content-Type', label: 'Content-Type' },
+  { key: 'Cookie', label: 'Cookie' },
+  { key: 'Date', label: 'Date' },
+  { key: 'Expect', label: 'Expect' },
+  { key: 'Forwarded', label: 'Forwarded' },
+  { key: 'From', label: 'From' },
+  { key: 'Host', label: 'Host' },
+  { key: 'If-Match', label: 'If-Match' },
+  { key: 'If-Modified-Since', label: 'If-Modified-Since' },
+  { key: 'If-None-Match', label: 'If-None-Match' },
+  { key: 'If-Range', label: 'If-Range' },
+  { key: 'If-Unmodified-Since', label: 'If-Unmodified-Since' },
+  { key: 'Max-Forwards', label: 'Max-Forwards' },
+  { key: 'Origin', label: 'Origin' },
+  { key: 'Pragma', label: 'Pragma' },
+  { key: 'Proxy-Authorization', label: 'Proxy-Authorization' },
+  { key: 'Range', label: 'Range' },
+  { key: 'Referer', label: 'Referer' },
+  { key: 'TE', label: 'TE' },
+  { key: 'User-Agent', label: 'User-Agent' },
+  { key: 'Upgrade', label: 'Upgrade' },
+  { key: 'Via', label: 'Via' },
+  { key: 'Warning', label: 'Warning' },
+  { key: 'Dnt', label: 'Dnt' },
+  { key: 'X-Requested-With', label: 'X-Requested-With' },
+  { key: 'X-CSRF-Token', label: 'X-CSRF-Token' }
+];
 
 enum TabEnum {
   params = 'params',
   headers = 'headers',
   body = 'body'
 }
-type PropsArrType = {
+export type PropsArrType = {
   key: string;
   type: string;
   value: string;
@@ -61,6 +104,8 @@ const RenderHttpMethodAndUrl = React.memo(function RenderHttpMethodAndUrl({
   const { t } = useTranslation();
   const { toast } = useToast();
   const [_, startSts] = useTransition();
+
+  const { isOpen: isOpenCurl, onOpen: onOpenCurl, onClose: onCloseCurl } = useDisclosure();
 
   const requestMethods = inputs.find((item) => item.key === ModuleInputKeyEnum.httpMethod);
   const requestUrl = inputs.find((item) => item.key === ModuleInputKeyEnum.httpReqUrl);
@@ -137,12 +182,10 @@ const RenderHttpMethodAndUrl = React.memo(function RenderHttpMethodAndUrl({
   return (
     <Box>
       <Box mb={2} display={'flex'} justifyContent={'space-between'}>
-        <span>{t('core.module.Http request settings')}</span>
-        <span>
-          <OpenApiImportModal moduleId={moduleId} inputs={inputs}>
-            <Button variant={'link'}>{t('core.module.http.OpenAPI import')}</Button>
-          </OpenApiImportModal>
-        </span>
+        <Box>{t('core.module.Http request settings')}</Box>
+        <Button variant={'link'} onClick={onOpenCurl}>
+          {t('core.module.http.curl import')}
+        </Button>
       </Box>
       <Flex alignItems={'center'} className="nodrag">
         <MySelect
@@ -186,21 +229,23 @@ const RenderHttpMethodAndUrl = React.memo(function RenderHttpMethodAndUrl({
           }}
         />
         <Input
+          flex={'1 0 0'}
           ml={2}
           h={'34px'}
           value={requestUrl?.value}
           placeholder={t('core.module.input.label.Http Request Url')}
           fontSize={'xs'}
-          w={'350px'}
           onChange={onChangeUrl}
           onBlur={onBlurUrl}
         />
       </Flex>
+
+      {isOpenCurl && <CurlImportModal moduleId={moduleId} inputs={inputs} onClose={onCloseCurl} />}
     </Box>
   );
 });
 
-function RenderHttpProps({
+export function RenderHttpProps({
   moduleId,
   inputs
 }: {
@@ -252,7 +297,7 @@ function RenderHttpProps({
     ];
     const moduleVariables = formatEditorVariablePickerIcon(
       inputs
-        .filter((input) => input.edit)
+        .filter((input) => input.edit || input.toolDescription)
         .map((item) => ({
           key: item.key,
           label: item.label
@@ -341,47 +386,6 @@ const RenderForm = ({
   const [shouldUpdateNode, setShouldUpdateNode] = useState(false);
 
   const leftVariables = useMemo(() => {
-    const HttpHeaders = [
-      { key: 'A-IM', label: 'A-IM' },
-      { key: 'Accept', label: 'Accept' },
-      { key: 'Accept-Charset', label: 'Accept-Charset' },
-      { key: 'Accept-Encoding', label: 'Accept-Encoding' },
-      { key: 'Accept-Language', label: 'Accept-Language' },
-      { key: 'Accept-Datetime', label: 'Accept-Datetime' },
-      { key: 'Access-Control-Request-Method', label: 'Access-Control-Request-Method' },
-      { key: 'Access-Control-Request-Headers', label: 'Access-Control-Request-Headers' },
-      { key: 'Authorization', label: 'Authorization' },
-      { key: 'Cache-Control', label: 'Cache-Control' },
-      { key: 'Connection', label: 'Connection' },
-      { key: 'Content-Length', label: 'Content-Length' },
-      { key: 'Content-Type', label: 'Content-Type' },
-      { key: 'Cookie', label: 'Cookie' },
-      { key: 'Date', label: 'Date' },
-      { key: 'Expect', label: 'Expect' },
-      { key: 'Forwarded', label: 'Forwarded' },
-      { key: 'From', label: 'From' },
-      { key: 'Host', label: 'Host' },
-      { key: 'If-Match', label: 'If-Match' },
-      { key: 'If-Modified-Since', label: 'If-Modified-Since' },
-      { key: 'If-None-Match', label: 'If-None-Match' },
-      { key: 'If-Range', label: 'If-Range' },
-      { key: 'If-Unmodified-Since', label: 'If-Unmodified-Since' },
-      { key: 'Max-Forwards', label: 'Max-Forwards' },
-      { key: 'Origin', label: 'Origin' },
-      { key: 'Pragma', label: 'Pragma' },
-      { key: 'Proxy-Authorization', label: 'Proxy-Authorization' },
-      { key: 'Range', label: 'Range' },
-      { key: 'Referer', label: 'Referer' },
-      { key: 'TE', label: 'TE' },
-      { key: 'User-Agent', label: 'User-Agent' },
-      { key: 'Upgrade', label: 'Upgrade' },
-      { key: 'Via', label: 'Via' },
-      { key: 'Warning', label: 'Warning' },
-      { key: 'Dnt', label: 'Dnt' },
-      { key: 'X-Requested-With', label: 'X-Requested-With' },
-      { key: 'X-CSRF-Token', label: 'X-CSRF-Token' }
-    ];
-
     return (tabType === TabEnum.headers ? HttpHeaders : variables).filter((variable) => {
       const existVariables = list.map((item) => item.key);
       return !existVariables.includes(variable.key);
@@ -454,7 +458,7 @@ const RenderForm = ({
   };
 
   return (
-    <TableContainer>
+    <TableContainer overflowY={'visible'} overflowX={'unset'}>
       <Table>
         <Thead>
           <Tr>
@@ -593,6 +597,8 @@ const RenderPropsItem = ({ text, num }: { text: string; num: number }) => {
 const NodeHttp = ({ data, selected }: NodeProps<FlowModuleItemType>) => {
   const { t } = useTranslation();
   const { moduleId, inputs, outputs } = data;
+  const { splitToolInputs, hasToolNode } = useFlowProviderStore();
+  const { toolInputs, commonInputs } = splitToolInputs(inputs, moduleId);
 
   const CustomComponents = useMemo(
     () => ({
@@ -613,18 +619,30 @@ const NodeHttp = ({ data, selected }: NodeProps<FlowModuleItemType>) => {
 
   return (
     <NodeCard minW={'350px'} selected={selected} {...data}>
-      <Divider text="Input" />
-      <Container>
-        <RenderInput
-          moduleId={moduleId}
-          flowInputList={inputs}
-          CustomComponent={CustomComponents}
-        />
-      </Container>
-      <Divider text="Output" />
-      <Container>
-        <RenderOutput moduleId={moduleId} flowOutputList={outputs} />
-      </Container>
+      {hasToolNode && (
+        <>
+          <Divider text={t('core.module.tool.Tool input')} />
+          <Container>
+            <RenderToolInput moduleId={moduleId} inputs={toolInputs} canEdit />
+          </Container>
+        </>
+      )}
+      <>
+        <Divider text={t('common.Input')} />
+        <Container>
+          <RenderInput
+            moduleId={moduleId}
+            flowInputList={commonInputs}
+            CustomComponent={CustomComponents}
+          />
+        </Container>
+      </>
+      <>
+        <Divider text={t('common.Output')} />
+        <Container>
+          <RenderOutput moduleId={moduleId} flowOutputList={outputs} />
+        </Container>
+      </>
     </NodeCard>
   );
 };

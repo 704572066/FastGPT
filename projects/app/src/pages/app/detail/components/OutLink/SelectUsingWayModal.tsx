@@ -1,6 +1,6 @@
 import { OutLinkSchema } from '@fastgpt/global/support/outLink/type';
 import React, { useCallback, useState } from 'react';
-import MyModal from '@/components/MyModal';
+import MyModal from '@fastgpt/web/components/common/MyModal';
 import { useTranslation } from 'next-i18next';
 import { Box, Flex, FlexProps, Grid, Image, ModalBody, Switch, useTheme } from '@chakra-ui/react';
 import MyRadio from '@/components/common/MyRadio';
@@ -88,7 +88,7 @@ const SelectUsingWayModal = ({ share, onClose }: { share: OutLinkSchema; onClose
   src="${linkUrl}"
   style="width: 100%; height: 100%;"
   frameborder="0" 
-  allow="microphone"
+  allow="*"
 />`
     },
     [UsingWayEnum.script]: {
@@ -102,7 +102,10 @@ const SelectUsingWayModal = ({ share, onClose }: { share: OutLinkSchema; onClose
   data-open-icon="${getValues('scriptOpenIcon')}"
   data-close-icon="${getValues('scriptCloseIcon')}"
   defer
-/>`
+></script>
+<script>
+console.log("Chat box loaded")
+</script>`
     }
   };
 

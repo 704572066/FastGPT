@@ -1,19 +1,9 @@
 import React, { useMemo, useRef } from 'react';
-import {
-  Box,
-  Flex,
-  Grid,
-  useTheme,
-  useDisclosure,
-  Card,
-  MenuButton,
-  Image,
-  Button
-} from '@chakra-ui/react';
+import { Box, Flex, Grid, useDisclosure, Image, Button } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import { useDatasetStore } from '@/web/core/dataset/store/dataset';
 import PageContainer from '@/components/PageContainer';
-import { useConfirm } from '@/web/common/hooks/useConfirm';
+import { useConfirm } from '@fastgpt/web/hooks/useConfirm';
 import { AddIcon } from '@chakra-ui/icons';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -28,14 +18,10 @@ import Avatar from '@/components/Avatar';
 import MyIcon from '@fastgpt/web/components/common/Icon';
 import { serviceSideProps } from '@/web/common/utils/i18n';
 import dynamic from 'next/dynamic';
-import {
-  DatasetTypeEnum,
-  DatasetTypeMap,
-  FolderIcon,
-  FolderImgUrl
-} from '@fastgpt/global/core/dataset/constants';
+import { DatasetTypeEnum, DatasetTypeMap } from '@fastgpt/global/core/dataset/constants';
+import { FolderImgUrl, FolderIcon } from '@fastgpt/global/common/file/image/constants';
 import MyMenu from '@/components/MyMenu';
-import { useRequest } from '@/web/common/hooks/useRequest';
+import { useRequest } from '@fastgpt/web/hooks/useRequest';
 import { useSystemStore } from '@/web/common/system/useSystemStore';
 import { useEditTitle } from '@/web/common/hooks/useEditTitle';
 import EditFolderModal, { useEditFolder } from '../component/EditFolderModal';
@@ -48,6 +34,7 @@ import ParentPaths from '@/components/common/ParentPaths';
 import DatasetTypeTag from '@/components/core/dataset/DatasetTypeTag';
 import { useToast } from '@fastgpt/web/hooks/useToast';
 import { getErrText } from '@fastgpt/global/common/error/utils';
+import { xmlDownloadFetch } from '@/web/common/api/xmlFetch';
 
 const CreateModal = dynamic(() => import('./component/CreateModal'), { ssr: false });
 const MoveModal = dynamic(() => import('./component/MoveModal'), { ssr: false });
@@ -104,12 +91,11 @@ const Kb = () => {
     mutationFn: async (dataset: DatasetItemType) => {
       setLoading(true);
       await checkTeamExportDatasetLimit(dataset._id);
-      const a = document.createElement('a');
-      a.href = `/api/core/dataset/exportAll?datasetId=${dataset._id}`;
-      a.download = `${dataset.name}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+
+      xmlDownloadFetch({
+        url: `/api/core/dataset/exportAll?datasetId=${dataset._id}`,
+        filename: `${dataset.name}.csv`
+      });
     },
     onSettled() {
       setLoading(false);
@@ -393,6 +379,7 @@ const Kb = () => {
                           {t('common.Delete')}
                         </Flex>
                       ),
+                      type: 'danger',
                       onClick: () => {
                         openConfirm(
                           () => onclickDelDataset(dataset._id),

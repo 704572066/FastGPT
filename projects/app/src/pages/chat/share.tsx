@@ -8,13 +8,14 @@ import { useQuery } from '@tanstack/react-query';
 import { streamFetch } from '@/web/common/api/fetch';
 import { useShareChatStore } from '@/web/core/chat/storeShareChat';
 import SideBar from '@/components/SideBar';
-import { gptMessage2ChatType } from '@/utils/adapt';
+import { GPTMessages2Chats } from '@fastgpt/global/core/chat/adapt';
 import { getErrText } from '@fastgpt/global/common/error/utils';
 import type { ChatHistoryItemType, ChatSiteItemType } from '@fastgpt/global/core/chat/type.d';
 import { customAlphabet } from 'nanoid';
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz1234567890', 12);
 
-import ChatBox, { type ComponentRef, type StartChatFnProps } from '@/components/ChatBox';
+import ChatBox from '@/components/ChatBox';
+import type { ComponentRef, StartChatFnProps } from '@/components/ChatBox/type.d';
 import PageContainer from '@/components/PageContainer';
 import ChatHeader from './components/ChatHeader';
 import ChatHistorySlider from './components/ChatHistorySlider';
@@ -22,12 +23,14 @@ import { serviceSideProps } from '@/web/common/utils/i18n';
 import { checkChatSupportSelectFileByChatModels } from '@/web/core/chat/utils';
 import { useTranslation } from 'next-i18next';
 import { getInitOutLinkChatInfo } from '@/web/core/chat/api';
-import { chatContentReplaceBlock } from '@fastgpt/global/core/chat/utils';
+import { getChatTitleFromChatMessage } from '@fastgpt/global/core/chat/utils';
 import { useChatStore } from '@/web/core/chat/storeChat';
 import { ChatStatusEnum } from '@fastgpt/global/core/chat/constants';
 import MyBox from '@/components/common/MyBox';
 import { MongoOutLink } from '@fastgpt/service/support/outLink/schema';
 import { OutLinkWithAppType } from '@fastgpt/global/support/outLink/type';
+import { addLog } from '@fastgpt/service/common/system/log';
+import { connectToDatabase } from '@/service/mongo';
 
 const OutLink = ({
   appName,
@@ -96,10 +99,7 @@ const OutLink = ({
         abortCtrl: controller
       });
 
-      const newTitle =
-        chatContentReplaceBlock(prompts[0].content).slice(0, 20) ||
-        prompts[1]?.value?.slice(0, 20) ||
-        t('core.chat.New Chat');
+      const newTitle = getChatTitleFromChatMessage(GPTMessages2Chats(prompts)[0]);
 
       // new chat
       if (completionChatId !== chatId) {
@@ -141,19 +141,18 @@ const OutLink = ({
       }));
 
       /* post message to report result */
-      const result: ChatSiteItemType[] = gptMessage2ChatType(prompts).map((item) => ({
+      const result: ChatSiteItemType[] = GPTMessages2Chats(prompts).map((item) => ({
         ...item,
+        dataId: item.dataId || nanoid(),
         status: 'finish'
       }));
-      result[1].value = responseText;
-      result[1].responseData = responseData;
 
       window.top?.postMessage(
         {
           type: 'shareChatFinish',
           data: {
             question: result[0]?.value,
-            answer: result[1]?.value
+            answer: responseText
           }
         },
         '*'
@@ -166,7 +165,6 @@ const OutLink = ({
       customVariables,
       shareId,
       outLinkUid,
-      t,
       setChatData,
       appId,
       pushHistory,
@@ -188,6 +186,7 @@ const OutLink = ({
         });
         const history = res.history.map((item) => ({
           ...item,
+          dataId: item.dataId || nanoid(),
           status: ChatStatusEnum.finish
         }));
 
@@ -400,6 +399,7 @@ export async function getServerSideProps(context: any) {
 
   const app = await (async () => {
     try {
+      await connectToDatabase();
       const app = (await MongoOutLink.findOne(
         {
           shareId
@@ -410,6 +410,7 @@ export async function getServerSideProps(context: any) {
         .lean()) as OutLinkWithAppType;
       return app;
     } catch (error) {
+      addLog.error('getServerSideProps', error);
       return undefined;
     }
   })();

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import MyModal from '@/components/MyModal';
+import MyModal from '@fastgpt/web/components/common/MyModal';
 import { useTranslation } from 'next-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { DragHandleIcon } from '@chakra-ui/icons';
@@ -36,12 +36,12 @@ import {
   TeamMemberStatusMap
 } from '@fastgpt/global/support/user/team/constant';
 import dynamic from 'next/dynamic';
-import { useRequest } from '@/web/common/hooks/useRequest';
+import { useRequest } from '@fastgpt/web/hooks/useRequest';
 import { setToken } from '@/web/support/user/auth';
 import { useLoading } from '@fastgpt/web/hooks/useLoading';
 import { FormDataType, defaultForm } from './EditModal';
 import MyMenu from '@/components/MyMenu';
-import { useConfirm } from '@/web/common/hooks/useConfirm';
+import { useConfirm } from '@fastgpt/web/hooks/useConfirm';
 import { useToast } from '@fastgpt/web/hooks/useToast';
 import { useSystemStore } from '@/web/common/system/useSystemStore';
 
@@ -194,7 +194,6 @@ const TeamManageModal = ({ onClose }: { onClose: () => void }) => {
                           bg: 'myGray.100'
                         }
                       })}
-                  onClick={() => onSwitchTeam(team.teamId)}
                 >
                   <Avatar src={team.avatar} w={['18px', '22px']} />
                   <Box

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import MyModal from '@/components/MyModal';
+import MyModal from '@fastgpt/web/components/common/MyModal';
 import { useTranslation } from 'next-i18next';
 import {
   Button,
@@ -20,7 +20,7 @@ import {
 } from '@chakra-ui/react';
 import { useToast } from '@fastgpt/web/hooks/useToast';
 import { useAppStore } from '@/web/core/app/store/useAppStore';
-import { useRequest } from '@/web/common/hooks/useRequest';
+import { useRequest } from '@fastgpt/web/hooks/useRequest';
 import { getTeamsTags } from '@/web/support/user/team/api';
 import { useQuery } from '@tanstack/react-query';
 

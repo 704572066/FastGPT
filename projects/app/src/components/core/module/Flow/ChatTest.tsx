@@ -8,15 +8,18 @@ import React, {
   useImperativeHandle,
   ForwardedRef
 } from 'react';
+import { SmallCloseIcon } from '@chakra-ui/icons';
 import { Box, Flex, IconButton } from '@chakra-ui/react';
 import MyIcon from '@fastgpt/web/components/common/Icon';
 import { streamFetch } from '@/web/common/api/fetch';
 import MyTooltip from '@/components/MyTooltip';
 import { useUserStore } from '@/web/support/user/useUserStore';
-import ChatBox, { type ComponentRef, type StartChatFnProps } from '@/components/ChatBox';
+import ChatBox from '@/components/ChatBox';
+import type { ComponentRef, StartChatFnProps } from '@/components/ChatBox/type.d';
 import { getGuideModule } from '@fastgpt/global/core/module/utils';
 import { checkChatSupportSelectFileByModules } from '@/web/core/chat/utils';
 import { ModuleInputKeyEnum } from '@fastgpt/global/core/module/constants';
+import { useTranslation } from 'next-i18next';
 
 export type ChatTestComponentRef = {
   resetChatTest: () => void;
@@ -34,6 +37,7 @@ const ChatTest = (
   },
   ref: ForwardedRef<ChatTestComponentRef>
 ) => {
+  const { t } = useTranslation();
   const ChatBoxRef = useRef<ComponentRef>(null);
   const { userInfo } = useUserStore();
   const isOpen = useMemo(() => modules && modules.length > 0, [modules]);
@@ -99,9 +103,9 @@ const ChatTest = (
       >
         <Flex py={4} px={5} whiteSpace={'nowrap'}>
           <Box fontSize={'xl'} fontWeight={'bold'} flex={1}>
-            调试预览
+            {t('core.chat.Debug test')}
           </Box>
-          <MyTooltip label={'重置'}>
+          <MyTooltip label={t('core.chat.Restart')}>
             <IconButton
               className="chat"
               size={'smSquare'}
@@ -116,10 +120,21 @@ const ChatTest = (
               }}
             />
           </MyTooltip>
+          <MyTooltip label={t('common.Close')}>
+            <IconButton
+              ml={[3, 6]}
+              icon={<SmallCloseIcon fontSize={'22px'} />}
+              variant={'grayBase'}
+              size={'smSquare'}
+              aria-label={''}
+              onClick={onClose}
+            />
+          </MyTooltip>
         </Flex>
         <Box flex={1}>
           <ChatBox
             ref={ChatBoxRef}
+            appId={app._id}
             appAvatar={app.avatar}
             userAvatar={userInfo?.avatar}
             showMarkIcon
@@ -130,7 +145,7 @@ const ChatTest = (
           />
         </Box>
       </Flex>
-      <Box
+      {/* <Box
         zIndex={2}
         display={isOpen ? 'block' : 'none'}
         position={'fixed'}
@@ -139,7 +154,7 @@ const ChatTest = (
         bottom={0}
         right={0}
         onClick={onClose}
-      />
+      /> */}
     </>
   );
 };

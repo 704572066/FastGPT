@@ -1,7 +1,8 @@
-import type { AppTTSConfigType, ModuleItemType, VariableItemType } from '../module/type.d';
+import type { FlowNodeTemplateType, ModuleItemType } from '../module/type.d';
+
 import { AppTypeEnum } from './constants';
 import { PermissionTypeEnum } from '../../support/permission/constant';
-import type { AIChatModuleProps, DatasetModuleProps } from '../module/node/type.d';
+import type { DatasetModuleProps } from '../module/node/type.d';
 import { VariableInputEnum } from '../module/constants';
 import { SelectedDatasetType } from '../module/api';
 import { DatasetSearchModeEnum } from '../dataset/constants';
@@ -13,7 +14,6 @@ export interface AppSchema {
   tmbId: string;
   name: string;
   type: `${AppTypeEnum}`;
-  simpleTemplateId: string;
   avatar: string;
   intro: string;
   updateTime: number;
@@ -37,19 +37,6 @@ export type AppDetailType = AppSchema & {
   canWrite: boolean;
 };
 
-// export type AppSimpleEditFormType = {
-//   aiSettings: AIChatModuleProps;
-//   dataset: DatasetModuleProps & {
-//     searchEmptyText: string;
-//   };
-//   userGuide: {
-//     welcomeText: string;
-//     variables: VariableItemType[];
-//     questionGuide: boolean;
-//     tts: AppTTSConfigType;
-//   };
-// };
-// Since useform cannot infer enumeration types, all enumeration keys can only be undone manually
 export type AppSimpleEditFormType = {
   // templateId: string;
   aiSettings: {
@@ -58,8 +45,7 @@ export type AppSimpleEditFormType = {
     temperature: number;
     maxToken: number;
     isResponseAnswerText: boolean;
-    quoteTemplate?: string | undefined;
-    quotePrompt?: string | undefined;
+    maxHistories: number;
   };
   dataset: {
     datasets: SelectedDatasetType;
@@ -67,11 +53,11 @@ export type AppSimpleEditFormType = {
     similarity?: number;
     limit?: number;
     usingReRank?: boolean;
-    searchEmptyText?: string;
     datasetSearchUsingExtensionQuery?: boolean;
     datasetSearchExtensionModel?: string;
     datasetSearchExtensionBg?: string;
   };
+  selectedTools: FlowNodeTemplateType[];
   userGuide: {
     welcomeText: string;
     variables: {
@@ -92,36 +78,31 @@ export type AppSimpleEditFormType = {
       voice?: string | undefined;
       speed?: number | undefined;
     };
+    whisper: AppWhisperConfigType;
   };
 };
 
-/* simple mode template*/
-export type AppSimpleEditConfigTemplateType = {
+/* app function config */
+// variable
+export type VariableItemType = {
   id: string;
-  name: string;
-  desc: string;
-  systemForm: {
-    aiSettings?: {
-      model?: boolean;
-      systemPrompt?: boolean;
-      temperature?: boolean;
-      maxToken?: boolean;
-      quoteTemplate?: boolean;
-      quotePrompt?: boolean;
-    };
-    dataset?: {
-      datasets?: boolean;
-      similarity?: boolean;
-      limit?: boolean;
-      searchMode: `${DatasetSearchModeEnum}`;
-      usingReRank: boolean;
-      searchEmptyText?: boolean;
-    };
-    userGuide?: {
-      welcomeText?: boolean;
-      variables?: boolean;
-      questionGuide?: boolean;
-      tts?: boolean;
-    };
-  };
+  key: string;
+  label: string;
+  type: `${VariableInputEnum}`;
+  required: boolean;
+  maxLen: number;
+  enums: { value: string }[];
+};
+// tts
+export type AppTTSConfigType = {
+  type: 'none' | 'web' | 'model';
+  model?: string;
+  voice?: string;
+  speed?: number;
+};
+// whisper
+export type AppWhisperConfigType = {
+  open: boolean;
+  autoSend: boolean;
+  autoTTSResponse: boolean;
 };

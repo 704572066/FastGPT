@@ -1,5 +1,5 @@
 import { getErrText } from '../error/utils';
-import { countPromptTokens } from './tiktoken';
+import { replaceRegChars } from './tools';
 
 /**
  * text split into chunks
@@ -30,16 +30,19 @@ export const splitText2Chunks = (props: {
 
   // The larger maxLen is, the next sentence is less likely to trigger splitting
   const stepReges: { reg: RegExp; maxLen: number }[] = [
-    ...customReg.map((text) => ({ reg: new RegExp(`(${text})`, 'g'), maxLen: chunkLen * 1.4 })),
+    ...customReg.map((text) => ({
+      reg: new RegExp(`(${replaceRegChars(text)})`, 'g'),
+      maxLen: chunkLen * 1.4
+    })),
     { reg: /^(#\s[^\n]+)\n/gm, maxLen: chunkLen * 1.2 },
     { reg: /^(##\s[^\n]+)\n/gm, maxLen: chunkLen * 1.2 },
     { reg: /^(###\s[^\n]+)\n/gm, maxLen: chunkLen * 1.2 },
     { reg: /^(####\s[^\n]+)\n/gm, maxLen: chunkLen * 1.2 },
 
     { reg: /([\n]([`~]))/g, maxLen: chunkLen * 4 }, // code block
-    { reg: /([\n](?!\s*[\*\-|>0-9]))/g, maxLen: chunkLen * 2 }, // (?![\*\-|>`0-9]): markdown special char
+    { reg: /([\n](?!\s*[\*\-|>0-9]))/g, maxLen: chunkLen * 2 }, // 增大块，尽可能保证它是一个完整的段落。 (?![\*\-|>`0-9]): markdown special char
     { reg: /([\n])/g, maxLen: chunkLen * 1.2 },
-
+    // ------ There's no overlap on the top
     { reg: /([。]|([a-zA-Z])\.\s)/g, maxLen: chunkLen * 1.2 },
     { reg: /([！]|!\s)/g, maxLen: chunkLen * 1.2 },
     { reg: /([？]|\?\s)/g, maxLen: chunkLen * 1.4 },
@@ -53,7 +56,7 @@ export const splitText2Chunks = (props: {
   const checkIndependentChunk = (step: number) => step >= customRegLen && step <= 4 + customRegLen;
   const checkForbidOverlap = (step: number) => step <= 6 + customRegLen;
 
-  // if use markdown title split, Separate record title title
+  // if use markdown title split, Separate record title
   const getSplitTexts = ({ text, step }: { text: string; step: number }) => {
     if (step >= stepReges.length) {
       return [
@@ -94,6 +97,7 @@ export const splitText2Chunks = (props: {
       .filter((item) => item.text.trim());
   };
 
+  /* Gets the overlap at the end of a text as the beginning of the next block */
   const getOneTextOverlapText = ({ text, step }: { text: string; step: number }): string => {
     const forbidOverlap = checkForbidOverlap(step);
     const maxOverlapLen = chunkLen * 0.4;

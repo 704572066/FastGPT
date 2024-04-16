@@ -1,10 +1,10 @@
 import { Button, ModalBody, ModalFooter, useDisclosure } from '@chakra-ui/react';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { editorStateToText } from './utils';
 import Editor from './Editor';
-import MyModal from '../../CustomModal';
+import MyModal from '../../MyModal';
 import { useTranslation } from 'next-i18next';
-import { $getRoot, EditorState, type LexicalEditor } from 'lexical';
+import { EditorState, type LexicalEditor } from 'lexical';
 import { EditorVariablePickerType } from './type.d';
 import { useCallback, useTransition } from 'react';
 
@@ -30,19 +30,16 @@ const PromptEditor = ({
   title?: string;
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-
   const [, startSts] = useTransition();
-
   const { t } = useTranslation();
 
-  const onChangeInput = useCallback((editorState: EditorState) => {
-    const text = editorState.read(() => $getRoot().getTextContent());
-    const formatValue = text.replaceAll('\n\n', '\n').replaceAll('}}{{', '}} {{');
-    onChange?.(formatValue);
+  const onChangeInput = useCallback((editorState: EditorState, editor: LexicalEditor) => {
+    const text = editorStateToText(editor).replaceAll('}}{{', '}} {{');
+    onChange?.(text);
   }, []);
   const onBlurInput = useCallback((editor: LexicalEditor) => {
     startSts(() => {
-      const text = editorStateToText(editor).replaceAll('\n\n', '\n').replaceAll('}}{{', '}} {{');
+      const text = editorStateToText(editor).replaceAll('}}{{', '}} {{');
       onBlur?.(text);
     });
   }, []);

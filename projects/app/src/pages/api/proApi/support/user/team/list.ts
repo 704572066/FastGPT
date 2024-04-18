@@ -29,32 +29,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
       .lean();
 
-    const teams = await MongoTeam.find({
-      _id: teamMembers[0].teamId
-      // ...(isOwner ? { teamId } : { tmbId })
-    })
-      .sort({
-        _id: -1
+    let data: TeamItemType[] = [];
+    if (teamMembers.length > 0) {
+      const teams = await MongoTeam.find({
+        _id: teamMembers[0].teamId
+        // ...(isOwner ? { teamId } : { tmbId })
       })
-      .lean();
+        .sort({
+          _id: -1
+        })
+        .lean();
 
-    const data = await Promise.all(
-      teamMembers.map<TeamItemType>((item) => ({
-        userId: item.userId,
-        teamId: item.teamId,
-        teamName: teams[0].name,
-        memberName: item.name,
-        avatar: teams[0].avatar,
-        balance: teams[0].balance,
-        tmbId: item._id,
-        role: item.role,
-        status: item.status,
-        defaultTeam: item.defaultTeam,
-        canWrite: canWrite,
-        teamDomain: ''
-      }))
-    );
-
+      data = await Promise.all(
+        teamMembers.map<TeamItemType>((item) => ({
+          userId: item.userId,
+          teamId: item.teamId,
+          teamName: teams[0].name,
+          memberName: item.name,
+          avatar: teams[0].avatar,
+          balance: teams[0].balance,
+          tmbId: item._id,
+          role: item.role,
+          status: item.status,
+          defaultTeam: item.defaultTeam,
+          canWrite: canWrite,
+          teamDomain: ''
+        }))
+      );
+    }
     jsonRes(res, { data });
   } catch (err) {
     jsonRes(res, {

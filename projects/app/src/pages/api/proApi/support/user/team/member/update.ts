@@ -9,7 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     await connectToDatabase();
 
-    const { memberId, teamId, role } = req.body as UpdateTeamMemberProps;
+    const { memberId, teamId, role, status } = req.body as UpdateTeamMemberProps;
 
     const tmb = await MongoTeamMember.findById(memberId);
     if (!tmb) {
@@ -17,14 +17,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // 更新对应的记录
-    await MongoTeamMember.updateOne(
-      {
-        _id: memberId
-      },
-      {
-        role
-      }
-    );
+    if (role) {
+      await MongoTeamMember.updateOne(
+        {
+          _id: memberId
+        },
+        {
+          role
+        }
+      );
+    }
+
+    // 更新对应的记录
+    if (status) {
+      await MongoTeamMember.updateOne(
+        {
+          _id: memberId
+        },
+        {
+          status
+        }
+      );
+    }
 
     jsonRes(res);
   } catch (err) {

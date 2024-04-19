@@ -13,6 +13,7 @@ import { MongoApp } from '@fastgpt/service/core/app/schema';
 import { MongoChatItem } from '@fastgpt/service/core/chat/chatItemSchema';
 import { MongoDatasetTraining } from '@fastgpt/service/core/dataset/training/schema';
 import { MongoTeamMember } from '@fastgpt/service/support/user/team/teamMemberSchema';
+import { TeamMemberRoleEnum } from '@fastgpt/global/support/user/team/constant';
 /*  */
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -135,6 +136,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // bills outlinks
 
       // 移除团队成员
+      const member = await MongoTeamMember.findOne(
+        {
+          _id: memberId,
+          teamId: teamId
+        },
+        '_id userId'
+      );
+
+      if (!member) {
+        throw new Error('找不到该成员');
+      }
+
+      await MongoTeamMember.updateOne(
+        {
+          userId: member.userId,
+          role: TeamMemberRoleEnum.owner
+        },
+        {
+          defaultTeam: true
+        },
+        { session }
+      );
+
       await MongoTeamMember.deleteOne(
         {
           _id: memberId,

@@ -19,26 +19,39 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     await connectToDatabase();
 
-    const { memberId, teamId } = req.query as DelMemberProps;
+    const { teamId } = req.query as { teamId: string };
 
-    if (!memberId || !teamId) {
+    if (!teamId) {
       throw new Error('参数错误');
+    }
+
+    // find team owner
+    const owner = await MongoTeamMember.findOne(
+      {
+        teamId: teamId,
+        role: TeamMemberRoleEnum.owner
+      },
+      '_id userId'
+    );
+
+    if (!owner) {
+      throw new Error('找不到团队创建者');
     }
 
     // 凭证校验
     // await authApp({ req, authToken: true, appId, per: 'owner' });
-    const { tmbId } = await authCert({ req, authToken: true, per: 'owner' });
+    const { tmbId } = await authCert({ req, authToken: true });
 
     await mongoSessionRun(async (session) => {
       // 转移知识库资源到创建者名下
       await MongoDataset.updateMany(
         {
           teamId: teamId,
-          tmbId: memberId
+          tmbId: tmbId
         },
         {
           $set: {
-            tmbId: tmbId
+            tmbId: owner._id
           }
         },
         { session }
@@ -47,11 +60,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await MongoDatasetData.updateMany(
         {
           teamId: teamId,
-          tmbId: memberId
+          tmbId: tmbId
         },
         {
           $set: {
-            tmbId: tmbId
+            tmbId: owner._id
           }
         },
         { session }
@@ -60,11 +73,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await MongoDatasetCollection.updateMany(
         {
           teamId: teamId,
-          tmbId: memberId
+          tmbId: tmbId
         },
         {
           $set: {
-            tmbId: tmbId
+            tmbId: owner._id
           }
         },
         { session }
@@ -73,11 +86,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await MongoDatasetTraining.updateMany(
         {
           teamId: teamId,
-          tmbId: memberId
+          tmbId: tmbId
         },
         {
           $set: {
-            tmbId: tmbId
+            tmbId: owner._id
           }
         },
         { session }
@@ -86,11 +99,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await MongoPlugin.updateMany(
         {
           teamId: teamId,
-          tmbId: memberId
+          tmbId: tmbId
         },
         {
           $set: {
-            tmbId: tmbId
+            tmbId: owner._id
           }
         },
         { session }
@@ -99,11 +112,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await MongoApp.updateMany(
         {
           teamId: teamId,
-          tmbId: memberId
+          tmbId: tmbId
         },
         {
           $set: {
-            tmbId: tmbId
+            tmbId: owner._id
           }
         },
         { session }
@@ -112,11 +125,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await MongoChatItem.updateMany(
         {
           teamId: teamId,
-          tmbId: memberId
+          tmbId: tmbId
         },
         {
           $set: {
-            tmbId: tmbId
+            tmbId: owner._id
           }
         },
         { session }
@@ -124,11 +137,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await MongoChat.updateMany(
         {
           teamId: teamId,
-          tmbId: memberId
+          tmbId: tmbId
         },
         {
           $set: {
-            tmbId: tmbId
+            tmbId: owner._id
           }
         },
         { session }
@@ -136,21 +149,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // bills outlinks
 
       // 移除团队成员
-      const member = await MongoTeamMember.findOne(
-        {
-          _id: memberId,
-          teamId: teamId
-        },
-        '_id userId'
-      );
+      // const member = await MongoTeamMember.findOne(
+      //   {
+      //     _id: tmbId,
+      //     teamId: teamId
+      //   },
+      //   '_id userId'
+      // );
 
-      if (!member) {
-        throw new Error('找不到该成员');
-      }
+      // if (!member) {
+      //   throw new Error('找不到该成员');
+      // }
 
       // await MongoTeamMember.updateOne(
       //   {
-      //     userId: member.userId,
+      //     userId: owner.userId,
       //     role: TeamMemberRoleEnum.owner
       //   },
       //   {
@@ -161,7 +174,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       await MongoTeamMember.deleteOne(
         {
-          _id: memberId,
+          _id: tmbId,
           teamId: teamId
         },
         { session }

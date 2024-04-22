@@ -16,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!teamId) {
       throw new Error('缺少参数');
     }
-    const { userId, tmbId, canWrite } = await authCert({ req, authToken: true });
+    const { userId, tmbId } = await authCert({ req, authToken: true });
     // 检测用户是否存在
     // const authCert = await MongoUser.findOne(
     //   {
@@ -45,25 +45,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // 更新对应的记录
-    await MongoTeamMember.updateOne(
-      {
-        _id: tmbId
-      },
-      {
-        defaultTeam: false
-      }
-    );
+    // await MongoTeamMember.updateOne(
+    //   {
+    //     _id: tmbId
+    //   },
+    //   {
+    //     defaultTeam: false
+    //   }
+    // );
 
     // 更新对应的记录
-    await MongoTeamMember.updateOne(
-      {
-        userId,
-        teamId
-      },
-      {
-        defaultTeam: true
-      }
-    );
+    // await MongoTeamMember.updateOne(
+    //   {
+    //     userId,
+    //     teamId
+    //   },
+    //   {
+    //     defaultTeam: true
+    //   }
+    // );
 
     const userDetail = await getUserDetail({
       tmbId: member?._id,

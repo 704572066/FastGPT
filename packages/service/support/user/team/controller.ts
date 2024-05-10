@@ -10,6 +10,7 @@ import { MongoTeam } from './teamSchema';
 
 async function getTeamMember(match: Record<string, any>): Promise<TeamItemType> {
   const tmb = (await MongoTeamMember.findOne(match).populate('teamId')) as TeamMemberWithTeamSchema;
+  // const tmb = (await MongoTeamMember.findOne(match)) as TeamMemberWithTeamSchema;
   if (!tmb) {
     return Promise.reject('member not exist');
   }

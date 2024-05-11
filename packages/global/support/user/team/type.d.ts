@@ -83,13 +83,3 @@ export type LafAccountType = {
   appid: string;
   pat: string;
 };
-
-export type TeamMemberType = {
-  teamId: string;
-  userId: string;
-  createTime: Date;
-  name: string;
-  role: `${TeamMemberRoleEnum}`;
-  status: `${TeamMemberStatusEnum}`;
-  defaultTeam: boolean;
-};

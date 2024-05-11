@@ -37,13 +37,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
 const defaultFeConfigs: FastGPTFeConfigsType = {
   show_emptyChat: true,
-  // show_git: true,
-  show_register: true,
-  show_team_chat: true,
-  // docUrl: 'https://doc.fastgpt.in',
-  // openAPIDocUrl: 'https://doc.fastgpt.in/docs/development/openapi',
-  systemTitle: 'GPT',
-  concatMd: 'gujie',
+  show_git: true,
+  docUrl: 'https://doc.fastgpt.in',
+  openAPIDocUrl: 'https://doc.fastgpt.in/docs/development/openapi',
+  systemTitle: 'FastGPT',
+  concatMd:
+    '项目开源地址: [FastGPT GitHub](https://github.com/labring/FastGPT)\n交流群: ![](https://oss.laf.run/htr4n1-images/fastgpt-qr-code.jpg)',
   limit: {
     exportDatasetLimitMinutes: 0,
     websiteSyncLimitMinuted: 0
@@ -64,7 +63,10 @@ export async function getInitConfig() {
       initSystemConfig(),
       // getSimpleModeTemplates(),
       getSystemVersion(),
-      getSystemPlugin()
+      getSystemPlugin(),
+
+      // abandon
+      getSystemPluginV1()
     ]);
 
     console.log({
@@ -94,8 +96,7 @@ export async function initSystemConfig() {
       ...fileRes?.feConfigs,
       ...defaultFeConfigs,
       ...(dbConfig.feConfigs || {}),
-      // isPlus: !!FastGPTProUrl
-      isPlus: true
+      isPlus: !!FastGPTProUrl
     },
     systemEnv: {
       ...fileRes.systemEnv,
@@ -165,4 +166,30 @@ function getSystemPlugin() {
   fileTemplates.sort((a, b) => b.weight - a.weight);
 
   global.communityPlugins = fileTemplates;
+}
+function getSystemPluginV1() {
+  if (global.communityPluginsV1 && global.communityPluginsV1.length > 0) return;
+
+  const basePath =
+    process.env.NODE_ENV === 'development'
+      ? 'data/pluginTemplates/v1'
+      : '/app/data/pluginTemplates/v1';
+  // read data/pluginTemplates directory, get all json file
+  const files = readdirSync(basePath);
+  // filter json file
+  const filterFiles = files.filter((item) => item.endsWith('.json'));
+
+  // read json file
+  const fileTemplates: (PluginTemplateType & { weight: number })[] = filterFiles.map((filename) => {
+    const content = readFileSync(`${basePath}/${filename}`, 'utf-8');
+    return {
+      ...JSON.parse(content),
+      id: `${PluginSourceEnum.community}-${filename.replace('.json', '')}`,
+      source: PluginSourceEnum.community
+    };
+  });
+
+  fileTemplates.sort((a, b) => b.weight - a.weight);
+
+  global.communityPluginsV1 = fileTemplates;
 }

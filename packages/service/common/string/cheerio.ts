@@ -14,7 +14,7 @@ export const cheerioToHtml = ({
 }) => {
   // get origin url
   const originUrl = new URL(fetchUrl).origin;
-
+  let internalUrl: string[] = [];
   const usedSelector = selector || 'body';
   const selectDom = $(usedSelector);
 
@@ -34,6 +34,7 @@ export const cheerioToHtml = ({
     const href = $(el).attr('href');
     if (href && href.startsWith('/')) {
       $(el).attr('href', originUrl + href);
+      internalUrl.push(originUrl + href);
     }
   });
   selectDom.find('img').each((i, el) => {
@@ -55,7 +56,8 @@ export const cheerioToHtml = ({
   return {
     html,
     title,
-    usedSelector
+    usedSelector,
+    internalUrl
   };
 };
 export const urlsFetch = async ({
@@ -72,7 +74,7 @@ export const urlsFetch = async ({
         });
 
         const $ = cheerio.load(fetchRes.data);
-        const { title, html, usedSelector } = cheerioToHtml({
+        const { title, html, usedSelector, internalUrl } = cheerioToHtml({
           fetchUrl: url,
           $,
           selector
@@ -85,7 +87,8 @@ export const urlsFetch = async ({
           url,
           title,
           content: md,
-          selector: usedSelector
+          selector: usedSelector,
+          internalUrl
         };
       } catch (error) {
         console.log(error, 'fetch error');
@@ -94,7 +97,8 @@ export const urlsFetch = async ({
           url,
           title: '',
           content: '',
-          selector: ''
+          selector: '',
+          internalUrl: []
         };
       }
     })

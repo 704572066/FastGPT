@@ -26,11 +26,8 @@ import { MongoDataset } from '@fastgpt/service/core/dataset/schema';
 import { useDatasetStore } from '@/web/core/dataset/store/dataset';
 import { status } from 'nprogress';
 import { putDatasetById } from '@/web/core/dataset/api';
+import { DatasetSchemaType } from '@fastgpt/global/core/dataset/type';
 // import { DatasetStatusEnum } from '@fastgpt/global/core/dataset/constants';
-export const Sleep = (ms) => {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-};
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse<any>) {
   try {
     // {"trainingType":"chunk","datasetId":"660b60f0e37a9c95ffc53f9d","chunkSize":500,"chunkSplitter":"",
@@ -38,7 +35,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     // "name":"http://www.sailing.com.cn/news/show-1089.html","link":"http://www.sailing.com.cn/news/show-1089.html",
     // "metadata":{"webPageSelector":""}}
     await connectToDatabase();
-    const link = 'http://www.sailing.com.cn/news/show-1089.html';
+    const link = 'https://fastai.site/docs/';
     const trainingType = TrainingModeEnum.chunk;
     const chunkSize = 512;
     const chunkSplitter = '';
@@ -57,13 +54,104 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       per: 'w'
     });
 
-    // 1. check dataset limit
-    await checkDatasetLimit({
-      teamId,
-      insertLen: predictDataLimitLength(trainingType, new Array(10))
-    });
+    crawl(link, datasetId, billId, teamId, tmbId, dataset, 1);
 
-    mongoSessionRun(async (session) => {
+    // 1. check dataset limit
+    // await checkDatasetLimit({
+    //   teamId,
+    //   insertLen: predictDataLimitLength(trainingType, new Array(10))
+    // });
+
+    // mongoSessionRun(async (session) => {
+    //   // 2. create collection
+    //   const collection = await createOneCollection({
+    //     metadata,
+    //     datasetId,
+    //     name: link,
+    //     teamId,
+    //     tmbId,
+    //     type: DatasetCollectionTypeEnum.link,
+
+    //     trainingType,
+    //     chunkSize,
+    //     chunkSplitter,
+    //     qaPrompt,
+
+    //     rawLink: link,
+    //     session
+    //   });
+
+    //   // load
+    //   await reloadCollectionChunks({
+    //     collection: {
+    //       ...collection.toObject(),
+    //       datasetId: dataset
+    //     },
+    //     tmbId,
+    //     billId,
+    //     session
+    //   });
+    //   // await Sleep(20000);
+    //   //同步状态更新
+    //   // await putDatasetById({ id: datasetId, status: DatasetStatusEnum.active });
+    //   await MongoDataset.updateOne(
+    //     { _id: datasetId },
+    //     {
+    //       status: DatasetStatusEnum.active
+    //     }
+    //     // { session } 添加session事务导致阻塞无法更新状态，目前还无法确定具体原因
+    //   );
+    //   // await MongoDataset.findByIdAndUpdate(datasetId, { status: DatasetStatusEnum.active }, { session });
+
+    //   return collection;
+    // });
+
+    //同步状态更新
+    // await putDatasetById({ id: datasetId, status: DatasetStatusEnum.active });
+    // await MongoDataset.updateOne(
+    //   { _id: datasetId },
+    //   {
+    //     status: DatasetStatusEnum.active
+    //   }
+    //   // { session } 添加session事务导致阻塞无法更新状态，目前还无法确定具体原因
+    // );
+
+    jsonRes(res, { data: 2000 });
+  } catch (err) {
+    jsonRes(res, {
+      code: 500,
+      error: err
+    });
+  }
+}
+
+async function crawl(
+  url: string,
+  datasetId: string,
+  billId: string,
+  teamId: string,
+  tmbId: string,
+  dataset: DatasetSchemaType,
+  depth = 1,
+  visited: Set<string> = new Set()
+): Promise<void> {
+  try {
+    if (visited.has(url)) {
+      return;
+    }
+
+    visited.add(url);
+
+    const link = url;
+    const trainingType = TrainingModeEnum.chunk;
+    const chunkSize = 512;
+    const chunkSplitter = '';
+    const metadata = { webPageSelector: '' };
+    const qaPrompt =
+      '<Context></Context> 标记中是一段文本，学习和分析它，并整理学习成果：\n- 提出问题并给出每个问题的答案。\n- 答案需详细完整，尽可能保留原文描述。\n- 答案可以包含普通文字、链接、代码、表格、公示、媒体链接等 Markdown 元素。\n- 最多提出 30 个问题。\n';
+
+    let internalUrls: string[] = [];
+    await mongoSessionRun(async (session) => {
       // 2. create collection
       const collection = await createOneCollection({
         metadata,
@@ -82,19 +170,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         session
       });
 
-      // 3. create bill and start sync
-      // const { billId } = await createTrainingUsage({
-      //   teamId,
-      //   tmbId,
-      //   appName: 'core.dataset.collection.Sync Collection',
-      //   billSource: UsageSourceEnum.training,
-      //   vectorModel: getVectorModel(dataset.vectorModel).name,
-      //   agentModel: getLLMModel(dataset.agentModel).name,
-      //   session
-      // });
-
-      // load
-      await reloadCollectionChunks({
+      const internalUrl = await reloadCollectionChunks({
         collection: {
           ...collection.toObject(),
           datasetId: dataset
@@ -103,8 +179,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         billId,
         session
       });
-      // await Sleep(20000);
-      //同步状态更新
+      if (internalUrl) internalUrls = internalUrl;
+    });
+
+    // const html = await fetchPageContent(url);
+    // const links = extractLinks(html);
+
+    console.log(`Depth ${depth}: ${url}`);
+
+    if (depth > 1) {
+      return;
+    }
+
+    for (const link of internalUrls) {
+      await crawl(link, datasetId, billId, teamId, tmbId, dataset, depth + 1, visited);
+    }
+    if (depth == 1) {
       // await putDatasetById({ id: datasetId, status: DatasetStatusEnum.active });
       await MongoDataset.updateOne(
         { _id: datasetId },
@@ -113,16 +203,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         }
         // { session } 添加session事务导致阻塞无法更新状态，目前还无法确定具体原因
       );
-      // await MongoDataset.findByIdAndUpdate(datasetId, { status: DatasetStatusEnum.active }, { session });
-
-      return collection;
-    });
-
-    jsonRes(res, { data: 2000 });
-  } catch (err) {
-    jsonRes(res, {
-      code: 500,
-      error: err
-    });
+    }
+  } catch (error) {
+    console.error('Error crawling page:', error);
   }
 }
+
+// async function fetchPageContent(url: string): Promise<string> {
+//     try {
+//       const response = await axios.get(url);
+//       return response.data;
+//     } catch (error) {
+//       throw new Error(`Error fetching page: ${error.message}`);
+//     }
+//   }
+
+//   function extractLinks(html: string): string[] {
+//     const $ = cheerio.load(html);
+//     const links: string[] = [];
+
+//     $('a').each((index, element) => {
+//       const link = $(element).attr('href');
+//       if (link && isValidURL(link)) {
+//         links.push(link);
+//       }
+//     });
+
+//     return links;
+//   }
+
+//   function isValidURL(url: string): boolean {
+//     try {
+//       new URL(url);
+//       return true;
+//     } catch (error) {
+//       return false;
+//     }
+//   }

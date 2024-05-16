@@ -1,5 +1,6 @@
 import { MongoImageTypeEnum } from './image/constants';
 import { OutLinkChatAuthProps } from '../../support/permission/chat.d';
+import internal from 'stream';
 
 export type preUploadImgProps = OutLinkChatAuthProps & {
   type: `${MongoImageTypeEnum}`;
@@ -20,4 +21,5 @@ export type UrlFetchResponse = {
   title: string;
   content: string;
   selector?: string;
+  internalUrl?: string[];
 }[];

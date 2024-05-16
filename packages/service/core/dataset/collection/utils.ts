@@ -109,7 +109,7 @@ export const getCollectionAndRawText = async ({
     return Promise.reject('Collection not found');
   }
 
-  const { title, rawText } = await (async () => {
+  const { title, rawText, internalUrl } = await (async () => {
     if (newRawText)
       return {
         title: '',
@@ -125,7 +125,8 @@ export const getCollectionAndRawText = async ({
 
       return {
         title: result[0]?.title,
-        rawText: result[0]?.content
+        rawText: result[0]?.content,
+        internalUrl: result[0]?.internalUrl
       };
     }
 
@@ -144,7 +145,8 @@ export const getCollectionAndRawText = async ({
     collection: col,
     title,
     rawText,
-    isSameRawText
+    isSameRawText,
+    internalUrl
   };
 };
 
@@ -166,13 +168,14 @@ export const reloadCollectionChunks = async ({
     title,
     rawText: newRawText,
     collection: col,
-    isSameRawText
+    isSameRawText,
+    internalUrl
   } = await getCollectionAndRawText({
     collection,
     newRawText: rawText
   });
 
-  if (isSameRawText) return;
+  if (isSameRawText) return internalUrl;
 
   // split data
   const { chunks } = splitText2Chunks({
@@ -214,4 +217,6 @@ export const reloadCollectionChunks = async ({
     },
     { session }
   );
+
+  return internalUrl;
 };

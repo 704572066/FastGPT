@@ -35,11 +35,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     // "name":"http://www.sailing.com.cn/news/show-1089.html","link":"http://www.sailing.com.cn/news/show-1089.html",
     // "metadata":{"webPageSelector":""}}
     await connectToDatabase();
-    const link = 'https://fastai.site/docs/';
+    const link =
+      'https://mp.weixin.qq.com/cgi-bin/appmsg?t=media/appmsg_edit_v2&action=edit&isNew=1&type=77&createType=0&token=1979188046&lang=zh_CN&timestamp=1715842841728';
     const trainingType = TrainingModeEnum.chunk;
     const chunkSize = 512;
     const chunkSplitter = '';
-    const metadata = { webPageSelector: '' };
+    const metadata = { webPageSelector: '.inner_link_article_list' };
     const qaPrompt =
       '<Context></Context> 标记中是一段文本，学习和分析它，并整理学习成果：\n- 提出问题并给出每个问题的答案。\n- 答案需详细完整，尽可能保留原文描述。\n- 答案可以包含普通文字、链接、代码、表格、公示、媒体链接等 Markdown 元素。\n- 最多提出 30 个问题。\n';
     const { datasetId, billId } = req.body as PostWebsiteSyncParams;

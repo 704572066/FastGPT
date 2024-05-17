@@ -7,7 +7,8 @@ import {
   getDatasets,
   getDatasetById,
   putDatasetById,
-  postWebsiteSync
+  postWebsiteSync,
+  postWeChatSync
 } from '@/web/core/dataset/api';
 import { defaultDatasetDetail } from '@/constants/dataset';
 import type { DatasetUpdateBody } from '@fastgpt/global/core/dataset/api.d';
@@ -25,6 +26,7 @@ type State = {
   loadDatasetDetail: (id: string, init?: boolean) => Promise<DatasetItemType>;
   updateDataset: (data: DatasetUpdateBody) => Promise<any>;
   startWebsiteSync: () => Promise<any>;
+  startWeChatSync: () => Promise<any>;
 };
 
 export const useDatasetStore = create<State>()(
@@ -95,6 +97,21 @@ export const useDatasetStore = create<State>()(
           });
 
           return postWebsiteSync({ datasetId: get().datasetDetail._id, billId }).then(() => {
+            get().updateDataset({
+              id: get().datasetDetail._id,
+              status: DatasetStatusEnum.syncing
+            });
+          });
+        },
+        async startWeChatSync() {
+          await checkTeamWebSyncLimit();
+
+          const billId = await postCreateTrainingUsage({
+            name: 'core.dataset.training.Website Sync',
+            datasetId: get().datasetDetail._id
+          });
+
+          return postWeChatSync({ datasetId: get().datasetDetail._id, billId }).then(() => {
             get().updateDataset({
               id: get().datasetDetail._id,
               status: DatasetStatusEnum.syncing

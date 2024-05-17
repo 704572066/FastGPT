@@ -114,6 +114,12 @@ const CreateModal = ({ onClose, parentId }: { onClose: () => void; parentId?: st
                       value: DatasetTypeEnum.websiteDataset,
                       icon: 'core/dataset/websiteDataset',
                       desc: t('core.dataset.Website Dataset Desc')
+                    },
+                    {
+                      title: t('core.dataset.WeChat Dataset'),
+                      value: DatasetTypeEnum.weChatDataset,
+                      icon: 'core/dataset/weChatDataset',
+                      desc: t('core.dataset.WeChat Dataset Desc')
                     }
                   ]
                 : [])

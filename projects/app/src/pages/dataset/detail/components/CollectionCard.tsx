@@ -65,6 +65,7 @@ import { usePagination } from '@fastgpt/web/hooks/usePagination';
 import { ImportDataSourceEnum } from '@fastgpt/global/core/dataset/constants';
 
 const WebSiteConfigModal = dynamic(() => import('./Import/WebsiteConfig'), {});
+const WeChatConfigModal = dynamic(() => import('./Import/WeChatConfig'), {});
 const FileSourceSelector = dynamic(() => import('./Import/components/FileSourceSelector'), {});
 
 const CollectionCard = () => {
@@ -78,7 +79,8 @@ const CollectionCard = () => {
   const { isPc } = useSystemStore();
   const { userInfo } = useUserStore();
   const [searchText, setSearchText] = useState('');
-  const { datasetDetail, updateDataset, startWebsiteSync, loadDatasetDetail } = useDatasetStore();
+  const { datasetDetail, updateDataset, startWebsiteSync, loadDatasetDetail, startWeChatSync } =
+    useDatasetStore();
 
   const { openConfirm: openDeleteConfirm, ConfirmModal: ConfirmDeleteModal } = useConfirm({
     content: t('dataset.Confirm to delete the file'),
@@ -97,6 +99,11 @@ const CollectionCard = () => {
     isOpen: isOpenWebsiteModal,
     onOpen: onOpenWebsiteModal,
     onClose: onCloseWebsiteModal
+  } = useDisclosure();
+  const {
+    isOpen: isOpenWeChatModal,
+    onOpen: onOpenWeChatModal,
+    onClose: onCloseWeChatModal
   } = useDisclosure();
   const { onOpenModal: onOpenCreateVirtualFileModal, EditModal: EditCreateVirtualFileModal } =
     useEditTitle({
@@ -248,6 +255,17 @@ const CollectionCard = () => {
     },
     errorToast: t('common.Update Failed')
   });
+  const { mutate: onUpdateDatasetWeChatConfig, isLoading: isUpdatingWeChat } = useRequest({
+    mutationFn: async (websiteConfig: DatasetSchemaType['websiteConfig']) => {
+      onCloseWeChatModal();
+      await updateDataset({
+        id: datasetDetail._id,
+        websiteConfig
+      });
+      return startWeChatSync();
+    },
+    errorToast: t('common.Update Failed')
+  });
   const { mutate: onclickStartSync, isLoading: isSyncing } = useRequest({
     mutationFn: (collectionId: string) => {
       return postLinkCollectionSync(collectionId);
@@ -275,9 +293,10 @@ const CollectionCard = () => {
       isCreating ||
       isDeleting ||
       isUpdating ||
+      isUpdatingWeChat ||
       isSyncing ||
       (isGetting && collections.length === 0),
-    [collections.length, isCreating, isDeleting, isGetting, isSyncing, isUpdating]
+    [collections.length, isCreating, isDeleting, isGetting, isSyncing, isUpdating, isUpdatingWeChat]
   );
 
   useQuery(
@@ -492,6 +511,41 @@ const CollectionCard = () => {
                 </Flex>
               ) : (
                 <Button onClick={onOpenWebsiteModal}>{t('core.dataset.Set Website Config')}</Button>
+              )}
+            </>
+          )}
+          {datasetDetail?.type === DatasetTypeEnum.weChatDataset && (
+            <>
+              {datasetDetail?.websiteConfig?.url ? (
+                <Flex alignItems={'center'}>
+                  {datasetDetail.status === DatasetStatusEnum.active && (
+                    <Button onClick={onOpenWebsiteModal}>{t('common.Config')}</Button>
+                  )}
+                  {datasetDetail.status === DatasetStatusEnum.syncing && (
+                    <Flex
+                      ml={3}
+                      alignItems={'center'}
+                      px={3}
+                      py={1}
+                      borderRadius="md"
+                      border={theme.borders.base}
+                    >
+                      <Box
+                        animation={'zoomStopIcon 0.5s infinite alternate'}
+                        bg={'myGray.700'}
+                        w="8px"
+                        h="8px"
+                        borderRadius={'50%'}
+                        mt={'1px'}
+                      ></Box>
+                      <Box ml={2} color={'myGray.600'}>
+                        {t('core.dataset.status.syncing')}
+                      </Box>
+                    </Flex>
+                  )}
+                </Flex>
+              ) : (
+                <Button onClick={onOpenWeChatModal}>{t('core.dataset.Set Website Config')}</Button>
               )}
             </>
           )}
@@ -832,6 +886,16 @@ const CollectionCard = () => {
           <WebSiteConfigModal
             onClose={onCloseWebsiteModal}
             onSuccess={onUpdateDatasetWebsiteConfig}
+            defaultValue={{
+              url: datasetDetail?.websiteConfig?.url,
+              selector: datasetDetail?.websiteConfig?.selector
+            }}
+          />
+        )}
+        {isOpenWeChatModal && (
+          <WeChatConfigModal
+            onClose={onCloseWeChatModal}
+            onSuccess={onUpdateDatasetWeChatConfig}
             defaultValue={{
               url: datasetDetail?.websiteConfig?.url,
               selector: datasetDetail?.websiteConfig?.selector

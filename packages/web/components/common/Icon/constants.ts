@@ -110,6 +110,7 @@ export const iconPaths = {
   'core/dataset/splitLight': () => import('./icons/core/dataset/splitLight.svg'),
   'core/dataset/tableCollection': () => import('./icons/core/dataset/tableCollection.svg'),
   'core/dataset/websiteDataset': () => import('./icons/core/dataset/websiteDataset.svg'),
+  'core/dataset/weChatDataset': () => import('./icons/core/dataset/weChatDataset.svg'),
   'core/modules/basicNode': () => import('./icons/core/modules/basicNode.svg'),
   'core/modules/fixview': () => import('./icons/core/modules/fixview.svg'),
   'core/modules/flowLight': () => import('./icons/core/modules/flowLight.svg'),

@@ -540,7 +540,9 @@
       "Text collection": "文本数据集",
       "Total chunks": "总分段: {{total}}",
       "Website Dataset": "Web 站点同步",
+      "WeChat Dataset": "微信公众号同步",
       "Website Dataset Desc": "Web 站点同步允许你直接使用一个网页链接构建知识库",
+      "WeChat Dataset Desc": "微信公众号同步允许你直接通过公众号名称构建知识库",
       "collection": {
         "Click top config website": "点击配置网站",
         "Collection name": "数据集名称",
@@ -554,6 +556,7 @@
         "Website Empty Tip": "还没有关联网站",
         "Website Link": "Web 站点地址",
         "Website Sync": "Web 站点同步",
+        "WeChat Sync": "微信公众号同步",
         "id": "集合ID",
         "metadata": {
           "Chunk Size": "分割大小",

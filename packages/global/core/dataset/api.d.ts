@@ -75,6 +75,11 @@ export type PostWebsiteSyncParams = {
   billId: string;
 };
 
+export type PostWeChatSyncParams = {
+  datasetId: string;
+  billId: string;
+};
+
 export type PushDatasetDataProps = {
   collectionId: string;
   data: PushDatasetDataChunkProps[];

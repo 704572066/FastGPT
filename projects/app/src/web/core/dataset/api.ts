@@ -65,6 +65,11 @@ export const postWebsiteSync = (data: PostWebsiteSyncParams) =>
     timeout: 600000
   }).catch();
 
+export const postWeChatSync = (data: PostWebsiteSyncParams) =>
+  POST(`/proApi/core/dataset/weChatSync`, data, {
+    timeout: 600000
+  }).catch();
+
 /* =========== search test ============ */
 export const postSearchText = (data: SearchTestProps) =>
   POST<SearchTestResponse>(`/core/dataset/searchTest`, data);

@@ -3,28 +3,28 @@ export enum DatasetTypeEnum {
   folder = 'folder',
   dataset = 'dataset',
   websiteDataset = 'websiteDataset', // depp link
-  weChatDataset = 'weChatDataset' // depp link
+  externalFile = 'externalFile'
 }
 export const DatasetTypeMap = {
   [DatasetTypeEnum.folder]: {
     icon: 'common/folderFill',
-    label: 'core.dataset.Folder Dataset',
+    label: 'Folder Dataset',
     collectionLabel: 'common.Folder'
   },
   [DatasetTypeEnum.dataset]: {
     icon: 'core/dataset/commonDataset',
-    label: 'core.dataset.Common Dataset',
+    label: 'Common Dataset',
     collectionLabel: 'common.File'
   },
   [DatasetTypeEnum.websiteDataset]: {
     icon: 'core/dataset/websiteDataset',
-    label: 'core.dataset.Website Dataset',
+    label: 'Website Dataset',
     collectionLabel: 'common.Website'
   },
-  [DatasetTypeEnum.weChatDataset]: {
-    icon: 'core/dataset/websiteDataset',
-    label: 'core.dataset.Website Dataset',
-    collectionLabel: 'common.Website'
+  [DatasetTypeEnum.externalFile]: {
+    icon: 'core/dataset/externalDataset',
+    label: 'External File',
+    collectionLabel: 'common.File'
   }
 };
 
@@ -44,9 +44,11 @@ export const DatasetStatusMap = {
 /* ------------ collection -------------- */
 export enum DatasetCollectionTypeEnum {
   folder = 'folder',
+  virtual = 'virtual',
+
   file = 'file',
   link = 'link', // one link
-  virtual = 'virtual'
+  externalFile = 'externalFile'
 }
 export const DatasetCollectionTypeMap = {
   [DatasetCollectionTypeEnum.folder]: {
@@ -54,6 +56,9 @@ export const DatasetCollectionTypeMap = {
   },
   [DatasetCollectionTypeEnum.file]: {
     name: 'core.dataset.file'
+  },
+  [DatasetCollectionTypeEnum.externalFile]: {
+    name: 'core.dataset.externalFile'
   },
   [DatasetCollectionTypeEnum.link]: {
     name: 'core.dataset.link'
@@ -83,7 +88,8 @@ export enum ImportDataSourceEnum {
   fileLocal = 'fileLocal',
   fileLink = 'fileLink',
   fileCustom = 'fileCustom',
-  csvTable = 'csvTable'
+  csvTable = 'csvTable',
+  externalFile = 'externalFile'
 }
 
 export enum TrainingModeEnum {
@@ -169,3 +175,10 @@ export const SearchScoreTypeMap = {
 
 export const CustomCollectionIcon = 'common/linkBlue';
 export const LinkCollectionIcon = 'common/linkBlue';
+
+/* source prefix */
+export enum DatasetSourceReadTypeEnum {
+  fileLocal = 'fileLocal',
+  link = 'link',
+  externalFile = 'externalFile'
+}

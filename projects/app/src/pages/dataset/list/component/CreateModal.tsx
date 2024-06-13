@@ -137,6 +137,12 @@ const CreateModal = ({ onClose, parentId }: { onClose: () => void; parentId?: st
                 value: DatasetTypeEnum.externalFile,
                 icon: 'core/dataset/externalDataset',
                 desc: datasetT('External file Dataset Desc')
+              },
+              {
+                title: datasetT('WeChat Dataset'),
+                value: DatasetTypeEnum.weChatDataset,
+                icon: 'core/dataset/weChatDataset',
+                desc: datasetT('WeChat Dataset Desc')
               }
             ]}
             value={datasetType}

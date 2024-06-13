@@ -1,7 +1,7 @@
 import React, { useState, Dispatch, useCallback } from 'react';
 import { FormControl, Box, Input, Button } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
-import { LoginPageTypeEnum } from '@/constants/user';
+import { LoginPageTypeEnum } from '@/web/support/user/login/constants';
 import { postRegister } from '@/web/support/user/api';
 import { useSendCode } from '@/web/support/user/hooks/useSendCode';
 import type { ResLogin } from '@/global/support/api/userRes';
@@ -181,7 +181,7 @@ const RegisterForm = ({ setPageType, loginSuccess }: Props) => {
           type="submit"
           mt={6}
           w={'100%'}
-          size={['md', 'lg']}
+          size={['md', 'md']}
           colorScheme="blue"
           isLoading={requesting}
           onClick={handleSubmit(onclickRegister)}

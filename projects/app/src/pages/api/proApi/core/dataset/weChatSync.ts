@@ -8,7 +8,7 @@ import { jsonRes } from '@fastgpt/service/common/response';
 import { connectToDatabase } from '@/service/mongo';
 import type {
   LinkCreateDatasetCollectionParams,
-  PostWeChatSyncParams
+  PostWebsiteSyncParams
 } from '@fastgpt/global/core/dataset/api.d';
 import { authDataset } from '@fastgpt/service/support/permission/auth/dataset';
 import { createOneCollection } from '@fastgpt/service/core/dataset/collection/controller';
@@ -31,31 +31,31 @@ import { putDatasetById } from '@/web/core/dataset/api';
 import { DatasetSchemaType } from '@fastgpt/global/core/dataset/type';
 // import { DatasetStatusEnum } from '@fastgpt/global/core/dataset/constants';
 export default async function handler(req: NextApiRequest, res: NextApiResponse<any>) {
-  await connectToDatabase();
-  const link =
-    'https://mp.weixin.qq.com/cgi-bin/appmsg?t=media/appmsg_edit_v2&action=edit&isNew=1&type=77&createType=0&token=1979188046&lang=zh_CN&timestamp=1715842841728';
-  const trainingType = TrainingModeEnum.chunk;
-  const chunkSize = 512;
-  const chunkSplitter = '';
-  const metadata = { webPageSelector: '' };
-  const qaPrompt =
-    '<Context></Context> 标记中是一段文本，学习和分析它，并整理学习成果：\n- 提出问题并给出每个问题的答案。\n- 答案需详细完整，尽可能保留原文描述。\n- 答案可以包含普通文字、链接、代码、表格、公示、媒体链接等 Markdown 元素。\n- 最多提出 30 个问题。\n';
-  const { datasetId, billId } = req.body as PostWeChatSyncParams;
-
-  // const { updateDataset } = useDatasetStore();
-
-  const { teamId, tmbId, dataset } = await authDataset({
-    req,
-    authToken: true,
-    authApiKey: true,
-    datasetId: datasetId,
-    per: 'w'
-  });
-
   try {
+    await connectToDatabase();
+
+    const { datasetId, billId } = req.body as PostWebsiteSyncParams;
+
+    // const { updateDataset } = useDatasetStore();
+
+    const { teamId, tmbId, dataset } = await authDataset({
+      req,
+      authToken: true,
+      authApiKey: true,
+      datasetId: datasetId,
+      per: 'w'
+    });
+
+    const trainingType = TrainingModeEnum.chunk;
+    const chunkSize = 512;
+    const chunkSplitter = '';
+    const metadata = { webPageSelector: dataset.websiteConfig?.selector };
+    const qaPrompt =
+      '<Context></Context> 标记中是一段文本，学习和分析它，并整理学习成果：\n- 提出问题并给出每个问题的答案。\n- 答案需详细完整，尽可能保留原文描述。\n- 答案可以包含普通文字、链接、代码、表格、公示、媒体链接等 Markdown 元素。\n- 最多提出 30 个问题。\n';
+
     const spider = new Spider();
     await spider.login();
-    const links = await spider.getArticle('赛灵药业');
+    const links = await spider.getArticle(dataset.websiteConfig?.url);
     for (const link of links) {
       await mongoSessionRun(async (session) => {
         // 2. create collection
@@ -88,6 +88,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         // if (internalUrl) internalUrls = internalUrl;
       });
     }
+    await MongoDataset.updateOne(
+      { _id: datasetId },
+      {
+        status: DatasetStatusEnum.active
+      }
+      // { session } 添加session事务导致阻塞无法更新状态，目前还无法确定具体原因
+    );
 
     jsonRes(res, { data: 2000 });
   } catch (err) {

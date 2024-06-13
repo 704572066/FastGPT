@@ -36,6 +36,10 @@ export const cheerioToHtml = ({
       $(el).attr('href', originUrl + href);
       internalUrl.push(originUrl + href);
     }
+    if (href && href.startsWith(originUrl)) {
+      $(el).attr('href', href);
+      internalUrl.push(href);
+    }
   });
   selectDom.find('img').each((i, el) => {
     const src = $(el).attr('src');

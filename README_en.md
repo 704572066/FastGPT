@@ -10,33 +10,36 @@
   <a href="./README_ja.md">日语</a>
 </p>
 
-FastGPT is a knowledge-based Q&A system built on the LLM，offers out-of-the-box data processing and model invocation capabilities，allows for workflow orchestration through Flow visualization！
+FastGPT is a knowledge-based platform built on the LLMs, offers a comprehensive suite of out-of-the-box capabilities such as data processing, RAG retrieval, and visual AI workflow orchestration, letting you easily develop and deploy complex question-answering systems without the need for extensive setup or configuration. 
 
 </div>
 
 <p align="center">
   <a href="https://fastgpt.in/">
-    <img height="21" src="https://img.shields.io/badge/在线使用-d4eaf7?style=flat-square&logo=spoj&logoColor=7d09f1" alt="cloud">
+    <img height="21" src="https://img.shields.io/badge/Try it Online-d4eaf7?style=flat-square&logo=spoj&logoColor=7d09f1" alt="cloud">
   </a>
   <a href="https://doc.fastgpt.in/docs/intro">
-    <img height="21" src="https://img.shields.io/badge/相关文档-7d09f1?style=flat-square" alt="document">
+    <img height="21" src="https://img.shields.io/badge/Documents-7d09f1?style=flat-square" alt="document">
   </a>
   <a href="https://doc.fastgpt.in/docs/development">
-    <img height="21" src="https://img.shields.io/badge/本地开发-%23d4eaf7?style=flat-square&logo=xcode&logoColor=7d09f1" alt="development">
-  </a>
-  <a href="/#-%E7%9B%B8%E5%85%B3%E9%A1%B9%E7%9B%AE">
-    <img height="21" src="https://img.shields.io/badge/相关项目-7d09f1?style=flat-square" alt="project">
+    <img height="21" src="https://img.shields.io/badge/Local Development-%23d4eaf7?style=flat-square&logo=xcode&logoColor=7d09f1" alt="development">
   </a>
   <a href="https://github.com/labring/FastGPT/blob/main/LICENSE">
     <img height="21" src="https://img.shields.io/badge/License-Apache--2.0-ffffff?style=flat-square&labelColor=d4eaf7&color=7d09f1" alt="license">
   </a>
 </p>
 
+<div align="center">
+
+  [![discord](https://theme.zdassets.com/theme_assets/678183/cc59daa07820943e943c2fc283b9079d7003ff76.svg)](https://discord.gg/mp68xkZn2Q)
+  
+</div>
+
 https://github.com/labring/FastGPT/assets/15308462/7d3a38df-eb0e-4388-9250-2409bd33f6d4
 
 ## 🛸 Use Cloud Services
 
-Cloud：[fastgpt.in](https://fastgpt.in/)
+Cloud: [fastgpt.in](https://fastgpt.in/)
 
 | | |
 | ---------------------------------- | ---------------------------------- |
@@ -51,7 +54,7 @@ Cloud：[fastgpt.in](https://fastgpt.in/)
 
 `1` Application Orchestration Features
 
-   - [x] Offers a straightforward mode，eliminating the need for complex orchestration
+   - [x] Offers a straightforward mode, eliminating the need for complex orchestration
    - [x] Provides clear next-step instructions in dialogues
    - [x] Facilitates workflow orchestration
    - [x] Tracks references in source files
@@ -68,7 +71,7 @@ Cloud：[fastgpt.in](https://fastgpt.in/)
    - [x] Enables specific vector models for each knowledge base
    - [x] Stores original source files
    - [x] Supports direct input and segment-based QA import
-   - [x] Compatible with a variety of file formats：pdf，docx，txt，html，md，csv
+   - [x] Compatible with a variety of file formats: pdf, docx, txt, html, md, csv
    - [x] Facilitates URL reading and bulk CSV importing
    - [ ] Supports PPT and Excel file import
    - [ ] Features a file reader
@@ -77,7 +80,7 @@ Cloud：[fastgpt.in](https://fastgpt.in/)
 `3` Application Debugging Features
 
    - [x] Enables targeted search testing within the knowledge base
-   - [x] Allows feedback，editing，and deletion during conversations
+   - [x] Allows feedback, editing, and deletion during conversations
    - [x] Presents the full context of interactions
    - [x] Displays all intermediate values within modules
    - [ ] Advanced DeBug mode for orchestration
@@ -92,7 +95,7 @@ Cloud：[fastgpt.in](https://fastgpt.in/)
 
    - [x] Share without requiring login
    - [x] Easy embedding with Iframe
-   - [x] Customizable chat window embedding with features like default open，drag-and-drop
+   - [x] Customizable chat window embedding with features like default open, drag-and-drop
    - [x] Centralizes conversation records for review and annotation
 
 
@@ -102,13 +105,13 @@ Cloud：[fastgpt.in](https://fastgpt.in/)
 
 ## 👨‍💻 Development
 
-Project tech stack：NextJs + TS + ChakraUI + Mongo + Postgres (Vector plugin)
+Project tech stack: NextJs + TS + ChakraUI + Mongo + Postgres (Vector plugin)
 
 - **⚡ Deployment**
 
   [![](https://cdn.jsdelivr.net/gh/labring-actions/templates@main/Deploy-on-Sealos.svg)](https://cloud.sealos.io/?openapp=system-fastdeploy%3FtemplateName%3Dfastgpt)
 
-  Give it a 2-4 minute wait after deployment as it sets up the database。Initially，it might be a tad slow since we're using the basic settings。
+  Give it a 2-4 minute wait after deployment as it sets up the database. Initially, it might be a tad slow since we're using the basic settings.
 
 - [Getting Started with Local Development](https://doc.fastgpt.in/docs/development)
 - [Deploying FastGPT](https://doc.fastgpt.in/docs/installation)
@@ -117,11 +120,11 @@ Project tech stack：NextJs + TS + ChakraUI + Mongo + Postgres (Vector plugin)
 - [Version Updates & Upgrades](https://doc.fastgpt.in/docs/installation/upgrading)
 
 
-## 🏘️ Community
+## 🏘️ Community & support
 
-| Community Group                                   | 
-| ------------------------------------------------- | 
-| ![](https://oss.laf.run/htr4n1-images/fastgpt-qr-code.jpg) | 
++ 🌐 Visit the [FastGPT website](https://fastgpt.in/) for full documentation and useful links.
++ 💬 Join our [Discord server](https://discord.gg/mp68xkZn2Q) is to chat with FastGPT developers and other FastGPT users. This is a good place to learn about FastGPT, ask questions, and share your experiences.
++ 🐞 Create [GitHub Issues](https://github.com/labring/FastGPT/issues/new/choose) for bug reports and feature requests.
 
 <a href="#readme">
     <img src="https://img.shields.io/badge/-Back_to_Top-7d09f1.svg" alt="#" align="right">
@@ -140,10 +143,10 @@ Project tech stack：NextJs + TS + ChakraUI + Mongo + Postgres (Vector plugin)
 
 ## 💪 Related Projects
 
-- [Laf：3-minute quick access to third-party applications](https://github.com/labring/laf)
-- [Sealos：Rapid deployment of cluster applications](https://github.com/labring/sealos)
-- [One API：Multi-model management，supports Azure，Wenxin Yiyuan，etc.](https://github.com/songquanpeng/one-api)
-- [TuShan：Build a backend management system in 5 minutes](https://github.com/msgbyte/tushan)
+- [Laf: 3-minute quick access to third-party applications](https://github.com/labring/laf)
+- [Sealos: Rapid deployment of cluster applications](https://github.com/labring/sealos)
+- [One API: Multi-model management, supports Azure, Wenxin Yiyuan, etc.](https://github.com/songquanpeng/one-api)
+- [TuShan: Build a backend management system in 5 minutes](https://github.com/msgbyte/tushan)
 
 <a href="#readme">
     <img src="https://img.shields.io/badge/-Back_to_Top-7d09f1.svg" alt="#" align="right">
@@ -151,7 +154,7 @@ Project tech stack：NextJs + TS + ChakraUI + Mongo + Postgres (Vector plugin)
 
 ## 🤝 Third-party Ecosystem
 
-- [luolinAI：Enterprise WeChat bot，ready to use](https://github.com/luolin-ai/FastGPT-Enterprise-WeChatbot)
+- [luolinAI: Enterprise WeChat bot, ready to use](https://github.com/luolin-ai/FastGPT-Enterprise-WeChatbot)
 
 <a href="#readme">
     <img src="https://img.shields.io/badge/-Back_to_Top-7d09f1.svg" alt="#" align="right">

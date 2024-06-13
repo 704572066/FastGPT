@@ -7,8 +7,7 @@ import {
   Input,
   Textarea,
   ModalFooter,
-  ModalBody,
-  Image
+  ModalBody
 } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
 import { AppSchema } from '@fastgpt/global/core/app/type.d';
@@ -19,51 +18,58 @@ import { getErrText } from '@fastgpt/global/common/error/utils';
 import { useRequest } from '@fastgpt/web/hooks/useRequest';
 import Avatar from '@/components/Avatar';
 import MyModal from '@fastgpt/web/components/common/MyModal';
-import { useAppStore } from '@/web/core/app/store/useAppStore';
-import PermissionRadio from '@/components/support/permission/Radio';
 import { useTranslation } from 'next-i18next';
 import { MongoImageTypeEnum } from '@fastgpt/global/common/file/image/constants';
+import MemberManager from '@/components/support/permission/MemberManager';
+import {
+  postUpdateAppCollaborators,
+  deleteAppCollaborators,
+  getCollaboratorList
+} from '@/web/core/app/api/collaborator';
+import { useContextSelector } from 'use-context-selector';
+import { AppContext } from '@/web/core/app/context/appContext';
+import {
+  AppDefaultPermission,
+  AppPermissionList
+} from '@fastgpt/global/support/permission/app/constant';
+import { ReadPermissionVal, WritePermissionVal } from '@fastgpt/global/support/permission/constant';
+import { PermissionValueType } from '@fastgpt/global/support/permission/type';
+import DefaultPermissionList from '@/components/support/permission/DefaultPerList';
 
-const InfoModal = ({
-  defaultApp,
-  onClose,
-  onSuccess
-}: {
-  defaultApp: AppSchema;
-  onClose: () => void;
-  onSuccess?: () => void;
-}) => {
+const InfoModal = ({ onClose }: { onClose: () => void }) => {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const { updateAppDetail } = useAppStore();
+  const { updateAppDetail, appDetail } = useContextSelector(AppContext, (v) => v);
 
   const { File, onOpen: onOpenSelectFile } = useSelectFile({
     fileType: '.jpg,.png',
     multiple: false
   });
+
   const {
     register,
     setValue,
     getValues,
     formState: { errors },
-    handleSubmit
+    handleSubmit,
+    watch
   } = useForm({
-    defaultValues: defaultApp
+    defaultValues: appDetail
   });
-  const [refresh, setRefresh] = useState(false);
+  const defaultPermission = watch('defaultPermission');
+  const avatar = getValues('avatar');
 
   // submit config
   const { mutate: saveSubmitSuccess, isLoading: btnLoading } = useRequest({
     mutationFn: async (data: AppSchema) => {
-      await updateAppDetail(data._id, {
+      await updateAppDetail({
         name: data.name,
         avatar: data.avatar,
         intro: data.intro,
-        permission: data.permission
+        defaultPermission: data.defaultPermission
       });
     },
     onSuccess() {
-      onSuccess && onSuccess();
       onClose();
       toast({
         title: t('common.Update Success'),
@@ -107,7 +113,6 @@ const InfoModal = ({
           maxH: 300
         });
         setValue('avatar', src);
-        setRefresh((state) => !state);
       } catch (err: any) {
         toast({
           title: getErrText(err, t('common.error.Select avatar failed')),
@@ -118,6 +123,20 @@ const InfoModal = ({
     [setValue, t, toast]
   );
 
+  const onUpdateCollaborators = async (tmbIds: string[], permission: PermissionValueType) => {
+    await postUpdateAppCollaborators({
+      tmbIds,
+      permission,
+      appId: appDetail._id
+    });
+  };
+  const onDelCollaborator = async (tmbId: string) => {
+    await deleteAppCollaborators({
+      appId: appDetail._id,
+      tmbId
+    });
+  };
+
   return (
     <MyModal
       isOpen={true}
@@ -126,10 +145,10 @@ const InfoModal = ({
       title={t('core.app.setting')}
     >
       <ModalBody>
-        <Box>{t('core.app.Name and avatar')}</Box>
+        <Box fontSize={'sm'}>{t('core.app.Name and avatar')}</Box>
         <Flex mt={2} alignItems={'center'}>
           <Avatar
-            src={getValues('avatar')}
+            src={avatar}
             w={['26px', '34px']}
             h={['26px', '34px']}
             cursor={'pointer'}
@@ -148,12 +167,9 @@ const InfoModal = ({
             ></Input>
           </FormControl>
         </Flex>
-        <Box mt={4} mb={1}>
+        <Box mt={4} mb={1} fontSize={'sm'}>
           {t('core.app.App intro')}
         </Box>
-        {/* <Box color={'myGray.500'} mb={2} fontSize={'sm'}>
-            该介绍主要用于记忆和在应用市场展示
-          </Box> */}
         <Textarea
           rows={4}
           maxLength={500}
@@ -161,16 +177,32 @@ const InfoModal = ({
           bg={'myWhite.600'}
           {...register('intro')}
         />
-        <Box mt={4}>
-          <Box mb={1}>{t('user.Permission')}</Box>
-          <PermissionRadio
-            value={getValues('permission')}
-            onChange={(e) => {
-              setValue('permission', e);
-              setRefresh(!refresh);
-            }}
-          />
-        </Box>
+
+        {/* role */}
+        {appDetail.permission.hasManagePer && (
+          <>
+            {' '}
+            <Box mt="4">
+              <Box fontSize={'sm'}>{t('permission.Default permission')}</Box>
+              <DefaultPermissionList
+                mt="2"
+                per={defaultPermission}
+                defaultPer={AppDefaultPermission}
+                readPer={ReadPermissionVal}
+                writePer={WritePermissionVal}
+                onChange={(v) => setValue('defaultPermission', v)}
+              />
+            </Box>
+            <Box mt={6}>
+              <MemberManager
+                onGetCollaboratorList={() => getCollaboratorList(appDetail._id)}
+                permissionList={AppPermissionList}
+                onUpdateCollaborators={onUpdateCollaborators}
+                onDelOneCollaborator={onDelCollaborator}
+              />
+            </Box>
+          </>
+        )}
       </ModalBody>
 
       <ModalFooter>

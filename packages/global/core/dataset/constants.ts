@@ -3,7 +3,8 @@ export enum DatasetTypeEnum {
   folder = 'folder',
   dataset = 'dataset',
   websiteDataset = 'websiteDataset', // depp link
-  externalFile = 'externalFile'
+  externalFile = 'externalFile',
+  weChatDataset = 'weChatDataset'
 }
 export const DatasetTypeMap = {
   [DatasetTypeEnum.folder]: {
@@ -25,6 +26,11 @@ export const DatasetTypeMap = {
     icon: 'core/dataset/externalDataset',
     label: 'External File',
     collectionLabel: 'common.File'
+  },
+  [DatasetTypeEnum.weChatDataset]: {
+    icon: 'core/dataset/weChatDataset',
+    label: 'WeChat Dataset',
+    collectionLabel: 'common.WeChat'
   }
 };
 

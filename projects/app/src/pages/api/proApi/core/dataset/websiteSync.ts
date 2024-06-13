@@ -30,22 +30,9 @@ import { DatasetSchemaType } from '@fastgpt/global/core/dataset/type';
 // import { DatasetStatusEnum } from '@fastgpt/global/core/dataset/constants';
 export default async function handler(req: NextApiRequest, res: NextApiResponse<any>) {
   try {
-    // {"trainingType":"chunk","datasetId":"660b60f0e37a9c95ffc53f9d","chunkSize":500,"chunkSplitter":"",
-    // "qaPrompt":"<Context></Context> 标记中是一段文本，学习和分析它，并整理学习成果：\n- 提出问题并给出每个问题的答案。\n- 答案需详细完整，尽可能保留原文描述。\n- 答案可以包含普通文字、链接、代码、表格、公示、媒体链接等 Markdown 元素。\n- 最多提出 30 个问题。\n",
-    // "name":"http://www.sailing.com.cn/news/show-1089.html","link":"http://www.sailing.com.cn/news/show-1089.html",
-    // "metadata":{"webPageSelector":""}}
     await connectToDatabase();
-    const link =
-      'https://mp.weixin.qq.com/cgi-bin/appmsg?t=media/appmsg_edit_v2&action=edit&isNew=1&type=77&createType=0&token=1979188046&lang=zh_CN&timestamp=1715842841728';
-    const trainingType = TrainingModeEnum.chunk;
-    const chunkSize = 512;
-    const chunkSplitter = '';
-    const metadata = { webPageSelector: '.inner_link_article_list' };
-    const qaPrompt =
-      '<Context></Context> 标记中是一段文本，学习和分析它，并整理学习成果：\n- 提出问题并给出每个问题的答案。\n- 答案需详细完整，尽可能保留原文描述。\n- 答案可以包含普通文字、链接、代码、表格、公示、媒体链接等 Markdown 元素。\n- 最多提出 30 个问题。\n';
-    const { datasetId, billId } = req.body as PostWebsiteSyncParams;
 
-    // const { updateDataset } = useDatasetStore();
+    const { datasetId, billId } = req.body as PostWebsiteSyncParams;
 
     const { teamId, tmbId, dataset } = await authDataset({
       req,
@@ -55,67 +42,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       per: 'w'
     });
 
-    crawl(link, datasetId, billId, teamId, tmbId, dataset, 1);
-
-    // 1. check dataset limit
-    // await checkDatasetLimit({
-    //   teamId,
-    //   insertLen: predictDataLimitLength(trainingType, new Array(10))
-    // });
-
-    // mongoSessionRun(async (session) => {
-    //   // 2. create collection
-    //   const collection = await createOneCollection({
-    //     metadata,
-    //     datasetId,
-    //     name: link,
-    //     teamId,
-    //     tmbId,
-    //     type: DatasetCollectionTypeEnum.link,
-
-    //     trainingType,
-    //     chunkSize,
-    //     chunkSplitter,
-    //     qaPrompt,
-
-    //     rawLink: link,
-    //     session
-    //   });
-
-    //   // load
-    //   await reloadCollectionChunks({
-    //     collection: {
-    //       ...collection.toObject(),
-    //       datasetId: dataset
-    //     },
-    //     tmbId,
-    //     billId,
-    //     session
-    //   });
-    //   // await Sleep(20000);
-    //   //同步状态更新
-    //   // await putDatasetById({ id: datasetId, status: DatasetStatusEnum.active });
-    //   await MongoDataset.updateOne(
-    //     { _id: datasetId },
-    //     {
-    //       status: DatasetStatusEnum.active
-    //     }
-    //     // { session } 添加session事务导致阻塞无法更新状态，目前还无法确定具体原因
-    //   );
-    //   // await MongoDataset.findByIdAndUpdate(datasetId, { status: DatasetStatusEnum.active }, { session });
-
-    //   return collection;
-    // });
-
-    //同步状态更新
-    // await putDatasetById({ id: datasetId, status: DatasetStatusEnum.active });
-    // await MongoDataset.updateOne(
-    //   { _id: datasetId },
-    //   {
-    //     status: DatasetStatusEnum.active
-    //   }
-    //   // { session } 添加session事务导致阻塞无法更新状态，目前还无法确定具体原因
-    // );
+    if (dataset.websiteConfig?.url)
+      crawl(dataset.websiteConfig.url, datasetId, billId, teamId, tmbId, dataset, 1);
 
     jsonRes(res, { data: 2000 });
   } catch (err) {
@@ -147,7 +75,7 @@ async function crawl(
     const trainingType = TrainingModeEnum.chunk;
     const chunkSize = 512;
     const chunkSplitter = '';
-    const metadata = { webPageSelector: '' };
+    const metadata = { webPageSelector: dataset.websiteConfig?.selector };
     const qaPrompt =
       '<Context></Context> 标记中是一段文本，学习和分析它，并整理学习成果：\n- 提出问题并给出每个问题的答案。\n- 答案需详细完整，尽可能保留原文描述。\n- 答案可以包含普通文字、链接、代码、表格、公示、媒体链接等 Markdown 元素。\n- 最多提出 30 个问题。\n';
 
@@ -193,6 +121,7 @@ async function crawl(
     }
 
     for (const link of internalUrls) {
+      // console.log("url: " + link);
       await crawl(link, datasetId, billId, teamId, tmbId, dataset, depth + 1, visited);
     }
     if (depth == 1) {

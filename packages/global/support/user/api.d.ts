@@ -21,3 +21,10 @@ export type FastLoginProps = {
   token: string;
   code: string;
 };
+
+export type PostRegisterProps = {
+  username: string;
+  code: string;
+  password: string;
+  inviterId?: string;
+};

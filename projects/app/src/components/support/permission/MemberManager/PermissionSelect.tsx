@@ -6,7 +6,8 @@ import {
   MenuList,
   Box,
   Radio,
-  useOutsideClick
+  useOutsideClick,
+  HStack
 } from '@chakra-ui/react';
 import React, { useMemo, useRef, useState } from 'react';
 import MyIcon from '@fastgpt/web/components/common/Icon';
@@ -49,7 +50,7 @@ function PermissionSelect({
   ...props
 }: PermissionSelectProps) {
   const { t } = useTranslation();
-  const { permissionList } = useContextSelector(CollaboratorContext, (v) => v);
+  const { permission, permissionList } = useContextSelector(CollaboratorContext, (v) => v);
   const ref = useRef<HTMLDivElement>(null);
   const closeTimer = useRef<any>();
 
@@ -66,10 +67,16 @@ function PermissionSelect({
     });
 
     return {
-      singleCheckBoxList: list.filter((item) => item.checkBoxType === 'single'),
+      singleCheckBoxList: list
+        .filter((item) => item.checkBoxType === 'single')
+        .filter((item) => {
+          if (permission.isOwner) return true;
+          if (item.value === permissionList['manage'].value) return false;
+          return true;
+        }),
       multipleCheckBoxList: list.filter((item) => item.checkBoxType === 'multiple')
     };
-  }, [permissionList]);
+  }, [permission.isOwner, permissionList]);
   const selectedSingleValue = useMemo(() => {
     const per = new Permission({ per: value });
 
@@ -87,6 +94,12 @@ function PermissionSelect({
       })
       .map((item) => item.value);
   }, [permissionSelectList.multipleCheckBoxList, value]);
+
+  const onSelectPer = (per: PermissionValueType) => {
+    if (per === value) return;
+    onChange(per);
+    setIsOpen(false);
+  };
 
   useOutsideClick({
     ref: ref,
@@ -130,9 +143,15 @@ function PermissionSelect({
             bottom={0}
             left={0}
           />
-          <Box position={'relative'} cursor={'pointer'} userSelect={'none'}>
+          <Flex
+            alignItems={'center'}
+            justifyContent={'center'}
+            position={'relative'}
+            cursor={'pointer'}
+            userSelect={'none'}
+          >
             {Button}
-          </Box>
+          </Flex>
         </Box>
         <MenuList
           minW={isOpen ? `${width}px !important` : 0}
@@ -151,8 +170,7 @@ function PermissionSelect({
               const per = new Permission({ per: value });
               per.removePer(selectedSingleValue);
               per.addPer(item.value);
-              onChange(per.value);
-              setIsOpen(false);
+              onSelectPer(per.value);
             };
 
             return (
@@ -171,7 +189,7 @@ function PermissionSelect({
                 <Box ml={4}>
                   <Box>{item.name}</Box>
                   <Box color={'myGray.500'} fontSize={'mini'}>
-                    {item.description}
+                    {t(item.description)}
                   </Box>
                 </Box>
               </Flex>
@@ -225,7 +243,7 @@ function PermissionSelect({
           {onDelete && (
             <>
               <MyDivider my={2} h={'2px'} borderColor={'myGray.200'} />
-              <Flex
+              <HStack
                 {...MenuStyle}
                 onClick={() => {
                   onDelete();
@@ -233,8 +251,8 @@ function PermissionSelect({
                 }}
               >
                 <MyIcon name="delete" w="20px" color="red.600" />
-                <Box color="red.600">{t('common.Delete')}</Box>
-              </Flex>
+                <Box color="red.600">{t('common.Remove')}</Box>
+              </HStack>
             </>
           )}
         </MenuList>

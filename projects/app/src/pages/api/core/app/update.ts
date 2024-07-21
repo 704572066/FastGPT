@@ -6,13 +6,14 @@ import { beforeUpdateAppFormat } from '@fastgpt/service/core/app/controller';
 import { NextAPI } from '@/service/middleware/entry';
 import {
   ManagePermissionVal,
-  WritePermissionVal,
-  OwnerPermissionVal
+  WritePermissionVal
 } from '@fastgpt/global/support/permission/constant';
+import { parseParentIdInMongo } from '@fastgpt/global/common/parentFolder/utils';
 
 /* 获取我的模型 */
 async function handler(req: NextApiRequest, res: NextApiResponse<any>) {
   const {
+    parentId,
     name,
     avatar,
     type,
@@ -20,7 +21,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse<any>) {
     nodes,
     edges,
     chatConfig,
-    permission,
     teamTags,
     defaultPermission
   } = req.body as AppUpdateParams;
@@ -31,9 +31,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse<any>) {
   }
 
   // 凭证校验
-  if (permission) {
-    await authApp({ req, authToken: true, appId, per: OwnerPermissionVal });
-  } else if (defaultPermission) {
+  if (defaultPermission) {
     await authApp({ req, authToken: true, appId, per: ManagePermissionVal });
   } else {
     await authApp({ req, authToken: true, appId, per: WritePermissionVal });
@@ -44,27 +42,22 @@ async function handler(req: NextApiRequest, res: NextApiResponse<any>) {
   const { nodes: formatNodes } = beforeUpdateAppFormat({ nodes });
 
   // 更新模型
-  await MongoApp.updateOne(
-    {
-      _id: appId
-    },
-    {
-      name,
-      type,
-      avatar,
-      intro,
-      permission,
-      defaultPermission,
-      ...(teamTags && teamTags),
-      ...(formatNodes && {
-        modules: formatNodes
-      }),
-      ...(edges && {
-        edges
-      }),
-      ...(chatConfig && { chatConfig })
-    }
-  );
+  await MongoApp.findByIdAndUpdate(appId, {
+    ...parseParentIdInMongo(parentId),
+    ...(name && { name }),
+    ...(type && { type }),
+    ...(avatar && { avatar }),
+    ...(intro !== undefined && { intro }),
+    ...(defaultPermission !== undefined && { defaultPermission }),
+    ...(teamTags && { teamTags }),
+    ...(formatNodes && {
+      modules: formatNodes
+    }),
+    ...(edges && {
+      edges
+    }),
+    ...(chatConfig && { chatConfig })
+  });
 }
 
 export default NextAPI(handler);

@@ -7,8 +7,6 @@ import { AuthUserTypeEnum, PerResourceTypeEnum } from '@fastgpt/global/support/p
 import { authOpenApiKey } from '../openapi/auth';
 import { FileTokenQuery } from '@fastgpt/global/common/file/type';
 import { MongoResourcePermission } from './schema';
-import { PermissionValueType } from '@fastgpt/global/support/permission/type';
-import { mongoSessionRun } from '../../common/mongo/sessionRun';
 
 export const getResourcePermission = async ({
   resourceType,
@@ -35,41 +33,6 @@ export const getResourcePermission = async ({
 };
 export const delResourcePermissionById = (id: string) => {
   return MongoResourcePermission.findByIdAndRemove(id);
-};
-export const updateResourcePermission = async ({
-  resourceId,
-  resourceType,
-  teamId,
-  tmbIdList,
-  permission
-}: {
-  resourceId?: string;
-  resourceType: PerResourceTypeEnum;
-  teamId: string;
-  tmbIdList: string[];
-  permission: PermissionValueType;
-}) => {
-  await mongoSessionRun((session) => {
-    return Promise.all(
-      tmbIdList.map((tmbId) =>
-        MongoResourcePermission.findOneAndUpdate(
-          {
-            resourceType,
-            teamId,
-            tmbId,
-            resourceId
-          },
-          {
-            permission
-          },
-          {
-            session,
-            upsert: true
-          }
-        )
-      )
-    );
-  });
 };
 
 /* 下面代码等迁移 */
@@ -122,7 +85,7 @@ export async function parseHeaderCert({
   async function authCookieToken(cookie?: string, token?: string) {
     // 获取 cookie
     const cookies = Cookie.parse(cookie || '');
-    const cookieToken = token || cookies.token;
+    const cookieToken = token || cookies[TokenName];
 
     if (!cookieToken) {
       return Promise.reject(ERROR_ENUM.unAuthorization);
@@ -235,12 +198,16 @@ export async function parseHeaderCert({
 }
 
 /* set cookie */
+export const TokenName = 'fastgpt_token';
 export const setCookie = (res: NextApiResponse, token: string) => {
-  res.setHeader('Set-Cookie', `token=${token}; Path=/; HttpOnly; Max-Age=604800; Samesite=Strict;`);
+  res.setHeader(
+    'Set-Cookie',
+    `${TokenName}=${token}; Path=/; HttpOnly; Max-Age=604800; Samesite=Strict;`
+  );
 };
 /* clear cookie */
 export const clearCookie = (res: NextApiResponse) => {
-  res.setHeader('Set-Cookie', 'token=; Path=/; Max-Age=0');
+  res.setHeader('Set-Cookie', `${TokenName}=; Path=/; Max-Age=0`);
 };
 
 /* file permission */

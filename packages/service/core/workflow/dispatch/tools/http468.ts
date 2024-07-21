@@ -43,14 +43,13 @@ export const dispatchHttp468Request = async (props: HttpRequestProps): Promise<H
   let {
     res,
     detail,
-    appId,
+    app: { _id: appId },
     chatId,
     stream,
     responseChatItemId,
     variables,
     node: { outputs },
     histories,
-    isToolCall,
     params: {
       system_httpMethod: httpMethod = 'POST',
       system_httpReqUrl: httpReqUrl,

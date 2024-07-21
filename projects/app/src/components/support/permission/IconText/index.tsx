@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { PermissionTypeEnum, PermissionTypeMap } from '@fastgpt/global/support/permission/constant';
-import { Box, Flex, FlexProps } from '@chakra-ui/react';
+import { Box, StackProps, HStack } from '@chakra-ui/react';
 import MyIcon from '@fastgpt/web/components/common/Icon';
 import { useTranslation } from 'next-i18next';
 import { PermissionValueType } from '@fastgpt/global/support/permission/type';
@@ -11,28 +11,31 @@ const PermissionIconText = ({
   defaultPermission,
   w = '1rem',
   fontSize = 'mini',
+  iconColor = 'myGray.500',
   ...props
 }: {
   permission?: `${PermissionTypeEnum}`;
   defaultPermission?: PermissionValueType;
-} & FlexProps) => {
+  iconColor?: string;
+} & StackProps) => {
   const { t } = useTranslation();
 
   const per = useMemo(() => {
     if (permission) return permission;
-    if (defaultPermission) {
-      return new Permission({ per: defaultPermission }).hasReadPer ? 'public' : 'private';
+    if (defaultPermission !== undefined) {
+      const Per = new Permission({ per: defaultPermission });
+      if (Per.hasWritePer) return PermissionTypeEnum.publicWrite;
+      if (Per.hasReadPer) return PermissionTypeEnum.publicRead;
+      return PermissionTypeEnum.clbPrivate;
     }
     return 'private';
   }, [defaultPermission, permission]);
 
   return PermissionTypeMap[per] ? (
-    <Flex alignItems={'center'} fontSize={fontSize} {...props}>
-      <MyIcon name={PermissionTypeMap[per]?.iconLight as any} w={w} />
-      <Box ml={'2px'} lineHeight={1} fontSize={'xs'}>
-        {t(PermissionTypeMap[per]?.label)}
-      </Box>
-    </Flex>
+    <HStack spacing={1} fontSize={fontSize} {...props}>
+      <MyIcon name={PermissionTypeMap[per]?.iconLight as any} w={w} color={iconColor} />
+      <Box lineHeight={1}>{t(PermissionTypeMap[per]?.label)}</Box>
+    </HStack>
   ) : null;
 };
 

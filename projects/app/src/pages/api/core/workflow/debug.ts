@@ -6,21 +6,15 @@ import { dispatchWorkFlow } from '@fastgpt/service/core/workflow/dispatch';
 import { authCert } from '@fastgpt/service/support/permission/auth/common';
 import { getUserChatInfoAndAuthTeamPoints } from '@/service/support/permission/auth/team';
 import { PostWorkflowDebugProps, PostWorkflowDebugResponse } from '@/global/core/workflow/api';
-import { authPluginCrud } from '@fastgpt/service/support/permission/auth/plugin';
 import { NextAPI } from '@/service/middleware/entry';
 import { ReadPermissionVal } from '@fastgpt/global/support/permission/constant';
+import { defaultApp } from '@/web/core/app/constants';
 
 async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ): Promise<PostWorkflowDebugResponse> {
-  const {
-    nodes = [],
-    edges = [],
-    variables = {},
-    appId,
-    pluginId
-  } = req.body as PostWorkflowDebugProps;
+  const { nodes = [], edges = [], variables = {}, appId } = req.body as PostWorkflowDebugProps;
 
   if (!nodes) {
     throw new Error('Prams Error');
@@ -38,12 +32,17 @@ async function handler(
       req,
       authToken: true
     }),
-    appId && authApp({ req, authToken: true, appId, per: ReadPermissionVal }),
-    pluginId && authPluginCrud({ req, authToken: true, pluginId, per: 'r' })
+    authApp({ req, authToken: true, appId, per: ReadPermissionVal })
   ]);
 
   // auth balance
   const { user } = await getUserChatInfoAndAuthTeamPoints(tmbId);
+
+  const app = {
+    ...defaultApp,
+    teamId,
+    tmbId
+  };
 
   /* start process */
   const { flowUsages, flowResponses, debugResponse } = await dispatchWorkFlow({
@@ -52,7 +51,7 @@ async function handler(
     teamId,
     tmbId,
     user,
-    appId,
+    app,
     runtimeNodes: nodes,
     runtimeEdges: edges,
     variables,

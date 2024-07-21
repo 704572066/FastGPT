@@ -1,4 +1,4 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import type { NextApiResponse } from 'next';
 import { MongoApp } from '@fastgpt/service/core/app/schema';
 import { AppListItemType } from '@fastgpt/global/core/app/type';
 import { authUserPer } from '@fastgpt/service/support/permission/user/auth';
@@ -9,8 +9,23 @@ import {
   ReadPermissionVal
 } from '@fastgpt/global/support/permission/constant';
 import { AppPermission } from '@fastgpt/global/support/permission/app/controller';
+import { ApiRequestProps } from '@fastgpt/service/type/next';
+import { ParentIdType } from '@fastgpt/global/common/parentFolder/type';
+import { parseParentIdInMongo } from '@fastgpt/global/common/parentFolder/utils';
+import { AppTypeEnum } from '@fastgpt/global/core/app/constants';
+import { AppDefaultPermissionVal } from '@fastgpt/global/support/permission/app/constant';
 
-async function handler(req: NextApiRequest, res: NextApiResponse<any>): Promise<AppListItemType[]> {
+export type ListAppBody = {
+  parentId?: ParentIdType;
+  type?: AppTypeEnum | AppTypeEnum[];
+  getRecentlyChat?: boolean;
+  searchKey?: string;
+};
+
+async function handler(
+  req: ApiRequestProps<ListAppBody>,
+  res: NextApiResponse<any>
+): Promise<AppListItemType[]> {
   // 凭证校验
   const {
     teamId,
@@ -22,12 +37,46 @@ async function handler(req: NextApiRequest, res: NextApiResponse<any>): Promise<
     per: ReadPermissionVal
   });
 
+  const { parentId, type, getRecentlyChat, searchKey } = req.body;
+
+  const findAppsQuery = (() => {
+    const searchMatch = searchKey
+      ? {
+          $or: [
+            { name: { $regex: searchKey, $options: 'i' } },
+            { intro: { $regex: searchKey, $options: 'i' } }
+          ]
+        }
+      : {};
+
+    if (getRecentlyChat) {
+      return {
+        // get all chat app
+        teamId,
+        type: { $in: [AppTypeEnum.workflow, AppTypeEnum.simple] },
+        ...searchMatch
+      };
+    }
+
+    return {
+      teamId,
+      ...(type && Array.isArray(type) && { type: { $in: type } }),
+      ...(type && { type }),
+      ...parseParentIdInMongo(parentId),
+      ...searchMatch
+    };
+  })();
+
   /* temp: get all apps and per */
   const [myApps, rpList] = await Promise.all([
-    MongoApp.find({ teamId }, '_id avatar name intro tmbId defaultPermission')
+    MongoApp.find(
+      findAppsQuery,
+      '_id avatar type name intro tmbId updateTime pluginData defaultPermission'
+    )
       .sort({
         updateTime: -1
       })
+      .limit(searchKey ? 20 : 1000)
       .lean(),
     MongoResourcePermission.find({
       resourceType: PerResourceTypeEnum.app,
@@ -51,13 +100,19 @@ async function handler(req: NextApiRequest, res: NextApiResponse<any>): Promise<
     })
     .filter((app) => app.permission.hasReadPer);
 
-  return filterApps.map((app) => ({
+  const sliceApps = getRecentlyChat ? filterApps.slice(0, 15) : filterApps;
+
+  return sliceApps.map((app) => ({
     _id: app._id,
+    tmbId: app.tmbId,
     avatar: app.avatar,
+    type: app.type,
     name: app.name,
     intro: app.intro,
+    updateTime: app.updateTime,
     permission: app.permission,
-    defaultPermission: app.defaultPermission
+    defaultPermission: app.defaultPermission || AppDefaultPermissionVal,
+    pluginData: app.pluginData
   }));
 }
 

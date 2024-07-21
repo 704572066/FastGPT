@@ -8,7 +8,7 @@ import type {
   LinkCreateDatasetCollectionParams,
   PostWebsiteSyncParams
 } from '@fastgpt/global/core/dataset/api.d';
-import { authDataset } from '@fastgpt/service/support/permission/auth/dataset';
+import { authDataset } from '@fastgpt/service/support/permission/dataset/auth';
 import { createOneCollection } from '@fastgpt/service/core/dataset/collection/controller';
 import {
   TrainingModeEnum,
@@ -27,6 +27,7 @@ import { useDatasetStore } from '@/web/core/dataset/store/dataset';
 import { status } from 'nprogress';
 import { putDatasetById } from '@/web/core/dataset/api';
 import { DatasetSchemaType } from '@fastgpt/global/core/dataset/type';
+import { WritePermissionVal } from '@fastgpt/global/support/permission/constant';
 // import { DatasetStatusEnum } from '@fastgpt/global/core/dataset/constants';
 export default async function handler(req: NextApiRequest, res: NextApiResponse<any>) {
   try {
@@ -39,7 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       authToken: true,
       authApiKey: true,
       datasetId: datasetId,
-      per: 'w'
+      per: WritePermissionVal
     });
 
     if (dataset.websiteConfig?.url)

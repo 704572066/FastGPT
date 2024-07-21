@@ -5,6 +5,9 @@ import { MongoUser } from '@fastgpt/service/support/user/schema';
 import { MongoTeamMember } from '@fastgpt/service/support/user/team/teamMemberSchema';
 // import { authApp } from '@fastgpt/service/support/permission/auth/app';
 import { authCert } from '@fastgpt/service/support/permission/auth/common';
+import type { ResourcePermissionType } from '@fastgpt/global/support/permission/type';
+import { MongoResourcePermission } from '@fastgpt/service/support/permission/schema';
+import { Types } from '@fastgpt/service/common/mongo';
 import {
   TeamMemberItemType,
   TeamSchema,
@@ -23,9 +26,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     await connectToDatabase();
 
-    const { teamId, usernames, role } = req.body as InviteMemberProps;
+    const { teamId, usernames, permission } = req.body as InviteMemberProps;
     // console.log(req.query);
-    const { userId, canWrite } = await authCert({ req, authToken: true });
+    // const { userId, canWrite } = await authCert({ req, authToken: true });
 
     // const { teamId, tmbId, isOwner } = await authApp({ req, authToken: true, status, per: 'w' });
     const teamMemberNames = await MongoTeamMember.find(
@@ -110,7 +113,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         userId: item.userId,
         name: item.username,
         teamId: teamId,
-        role: role,
+        // role: '',
         status: TeamMemberStatusEnum.waiting,
         createTime: new Date(),
         defaultTeam: false
@@ -118,6 +121,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     );
 
     const insertResult = await MongoTeamMember.insertMany(insert);
+
+    const insertPermission = await Promise.all(
+      insertResult.map<Omit<ResourcePermissionType, 'resourceId'>>((item) => ({
+        tmbId: item._id,
+        teamId: teamId,
+        // role: '',
+        permission: permission,
+        resourceType: 'team'
+        // resourceId: null
+      }))
+    );
+
+    const insertPermissionResult = await MongoResourcePermission.insertMany(insertPermission);
 
     const data: InviteMemberResponse = { inTeam: inTeam, inValid: inValid, invite: inviteUsers };
 

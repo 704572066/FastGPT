@@ -28,7 +28,7 @@ import {
   postUpdateAppCollaborators
 } from '@/web/core/app/api/collaborator';
 import MyTooltip from '@fastgpt/web/components/common/MyTooltip';
-import AppTypeTag from '@/components/core/app/TypeTag';
+import AppTypeTag from '@/pages/app/list/components/TypeTag';
 
 const EditResourceModal = dynamic(() => import('@/components/common/Modal/EditResourceModal'));
 const ConfigPerModal = dynamic(() => import('@/components/support/permission/ConfigPerModal'));

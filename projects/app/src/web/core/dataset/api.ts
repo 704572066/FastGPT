@@ -63,6 +63,8 @@ export const getAllDataset = () => GET<DatasetSimpleItemType[]>(`/core/dataset/a
 export const getDatasetPaths = (parentId: ParentIdType) =>
   GET<ParentTreePathItemType[]>('/core/dataset/paths', { parentId });
 
+export const getQRCode = () => GET<any>('proApi/core/dataset/weChatQRCode');
+
 export const getDatasetById = (id: string) => GET<DatasetItemType>(`/core/dataset/detail?id=${id}`);
 
 export const postCreateDataset = (data: CreateDatasetParams) =>

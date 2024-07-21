@@ -75,7 +75,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // });
 
     const token = createJWT(userDetail);
-    // setCookie(res, token);
+    setCookie(res, token);
     // return token;
     jsonRes(res, {
       data: token

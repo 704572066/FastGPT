@@ -10,7 +10,7 @@ import type {
   LinkCreateDatasetCollectionParams,
   PostWebsiteSyncParams
 } from '@fastgpt/global/core/dataset/api.d';
-import { authDataset } from '@fastgpt/service/support/permission/auth/dataset';
+import { authDataset } from '@fastgpt/service/support/permission/dataset/auth';
 import { createOneCollection } from '@fastgpt/service/core/dataset/collection/controller';
 import {
   TrainingModeEnum,
@@ -25,17 +25,20 @@ import { getLLMModel, getVectorModel } from '@fastgpt/service/core/ai/model';
 import { reloadCollectionChunks } from '@fastgpt/service/core/dataset/collection/utils';
 import { mongoSessionRun } from '@fastgpt/service/common/mongo/sessionRun';
 import { MongoDataset } from '@fastgpt/service/core/dataset/schema';
+import { MongoQRCode } from '@fastgpt/service/core/dataset/qrcode/schema';
 import { useDatasetStore } from '@/web/core/dataset/store/dataset';
 import { status } from 'nprogress';
 import { putDatasetById } from '@/web/core/dataset/api';
 import { DatasetSchemaType } from '@fastgpt/global/core/dataset/type';
+import { WritePermissionVal } from '@fastgpt/global/support/permission/constant';
+import { authCert } from '@fastgpt/service/support/permission/auth/common';
 // import { DatasetStatusEnum } from '@fastgpt/global/core/dataset/constants';
 export default async function handler(req: NextApiRequest, res: NextApiResponse<any>) {
   try {
     await connectToDatabase();
 
     const { datasetId, billId } = req.body as PostWebsiteSyncParams;
-
+    const { userId } = await authCert({ req, authToken: true });
     // const { updateDataset } = useDatasetStore();
 
     const { teamId, tmbId, dataset } = await authDataset({
@@ -43,7 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       authToken: true,
       authApiKey: true,
       datasetId: datasetId,
-      per: 'w'
+      per: WritePermissionVal
     });
 
     const trainingType = TrainingModeEnum.chunk;
@@ -53,8 +56,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     const qaPrompt =
       '<Context></Context> 标记中是一段文本，学习和分析它，并整理学习成果：\n- 提出问题并给出每个问题的答案。\n- 答案需详细完整，尽可能保留原文描述。\n- 答案可以包含普通文字、链接、代码、表格、公示、媒体链接等 Markdown 元素。\n- 最多提出 30 个问题。\n';
 
-    const spider = new Spider();
-    await spider.login();
+    const spider = new Spider(userId);
+    const qrcode = await spider.login();
+    // setCookie('gpt_wx_qrcode', qrcode, { req, res, maxAge: 60 * 60 * 24 }); // 设置 cookie 有效期为1天
+    // await new Promise((_func) => setTimeout(_func, 20000));
     const links = await spider.getArticle(dataset.websiteConfig?.url);
     for (const link of links) {
       await mongoSessionRun(async (session) => {
@@ -107,13 +112,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
 class Spider {
   // private account: string;
-  // private pwd: string;
+  private userId: string;
   private browser: any;
   private page: any;
   private cookies: any;
 
-  constructor() {
-    // this.account = '286394973@qq.com';
+  constructor(userId: string) {
+    this.userId = userId;
     // this.pwd = 'lei4649861';
     // this.browser= await puppeteer.launch();
     // this.page = await this.browser.newPage();
@@ -121,12 +126,18 @@ class Spider {
   }
 
   async createDriver() {
-    this.browser = await puppeteer.launch({
-      headless: false,
-      args: ['--disable-gpu']
+    // this.browser = await puppeteer.launch({
+    //   headless: true,
+    //   args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu'],
+    //   executablePath: "/usr/bin/chromium-browser",
+
+    // });
+    this.browser = await puppeteer.connect({
+      browserWSEndpoint: process.env.BROWSERLESS_URL
+      // headless: false
     });
     this.page = await this.browser.newPage();
-    await this.page.setViewport({ width: 1280, height: 800 });
+    // await this.page.setViewport({ width: 1280, height: 800 });
   }
 
   log(msg: string) {
@@ -136,20 +147,43 @@ class Spider {
   async login() {
     try {
       await this.createDriver();
-      await this.page.goto('https://mp.weixin.qq.com/', { waitUntil: 'networkidle2' });
+      await this.page.goto('https://mp.weixin.qq.com/', {
+        waitUntil: ['load', 'networkidle0', 'networkidle2'],
+        timeout: 120000
+      });
 
-      // await this.page.type("input[name='account']", this.account);
-      // await this.page.type("input[name='password']", this.pwd);
+      // await this.page.waitForSelector('.login__type__container__scan__qrcode', { timeout: 30000 });
+      this.cookies = await this.page.cookies();
+      const uuid = this.cookies.find((cookie: any) => cookie.name === 'uuid');
+      const url = await this.page.evaluate(() => {
+        const image = document
+          .querySelector('.login__type__container__scan__qrcode')
+          ?.getAttribute('src');
+        // const srcs = Array.from(images).map(img => img.src);
+        return image;
+      });
+      const response = await axios.get('https://' + uuid.domain + url, {
+        responseType: 'arraybuffer',
+        withCredentials: true,
+        headers: {
+          Cookie: 'uuid=' + uuid.value
+        }
+      });
 
-      // await this.page.click('.btn_login');
+      const base64Image = Buffer.from(response.data).toString('base64');
+      const result = await MongoQRCode.findOneAndUpdate(
+        { userId: this.userId }, // 查询条件
+        { url: uuid.domain + url, uuid: uuid.value, base64img: base64Image, isValid: true }, // 更新内容
+        { new: true, upsert: true } // 选项
+      );
 
       this.log('请拿手机扫码二维码登录公众号');
-      // await this.page.waitForTimeout(10000);
-      await new Promise((_func) => setTimeout(_func, 10000));
-
+      // await this.page.waitForTimeout(20000);
+      await new Promise((_func) => setTimeout(_func, 15000));
       this.log('登录成功');
-
+      //扫码后cookies中带有token
       this.cookies = await this.page.cookies();
+      return url;
     } catch (e) {
       console.error(e);
     } finally {
@@ -176,7 +210,7 @@ class Spider {
       const tokenMatch = response.request.res.responseUrl.match(/token=(\d+)/);
       const token = tokenMatch ? tokenMatch[1] : '';
 
-      this.log(`正在查询[ ${query} ]相关公众号`);
+      this.log(`正在查询[ ${query} ]相关公众号 获取的token：${token}`);
 
       const searchUrl = 'https://mp.weixin.qq.com/cgi-bin/searchbiz?';
       const params = {

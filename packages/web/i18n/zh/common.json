@@ -805,6 +805,17 @@
         "Selector Course": "使用教程",
         "Start Sync": "开始同步",
         "UnValid Website Tip": "您的站点可能非静态站点，无法同步"
+      },
+      "weChat": {
+        "Name": "公众号名称",
+        "Config": "微信公众号配置",
+        "Config Description": "微信公众号同步功能允许你填写公众号名称，系统会自动抓取公众号文章进行知识库训练。",
+        "Confirm Create Tips": "确认同步该公众号，同步任务将随后开启，请确认！",
+        "Confirm Update Tips": "确认更新公众号配置？会立即按新的配置开始同步，请确认！",
+        "Selector": "选择器",
+        "Selector Course": "使用教程",
+        "Start Sync": "开始同步",
+        "UnValid WeChat Tip": "您的公众号可能有问题，无法同步"
       }
     },
     "module": {

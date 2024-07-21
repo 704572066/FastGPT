@@ -14,14 +14,16 @@ import { usePagination } from '@fastgpt/web/hooks/usePagination';
 import { DatasetCollectionsListItemType } from '@/global/core/dataset/type';
 import { useRouter } from 'next/router';
 import { DatasetPageContext } from '@/web/core/dataset/context/datasetPageContext';
-
+// import puppeteer from 'puppeteer';
 const WebSiteConfigModal = dynamic(() => import('./WebsiteConfig'));
 const WeChatConfigModal = dynamic(() => import('./WeChatConfig'));
+const WeChatQRCodeModal = dynamic(() => import('./WeChatQRCode'));
 
 type CollectionPageContextType = {
   openWebSyncConfirm: () => void;
   onOpenWebsiteModal: () => void;
   onOpenWeChatModal: () => void;
+  onOpenWeChatQRCodeModal: () => void;
   collections: DatasetCollectionsListItemType[];
   Pagination: () => JSX.Element;
   total: number;
@@ -41,6 +43,9 @@ export const CollectionPageContext = createContext<CollectionPageContextType>({
     throw new Error('Function not implemented.');
   },
   onOpenWeChatModal: function (): void {
+    throw new Error('Function not implemented.');
+  },
+  onOpenWeChatQRCodeModal: function (): void {
     throw new Error('Function not implemented.');
   },
   collections: [],
@@ -118,12 +123,20 @@ const CollectionPageContextProvider = ({ children }: { children: ReactNode }) =>
         name: t('core.dataset.training.Website Sync'),
         datasetId: datasetId
       });
+      onOpenWeChatQRCodeModal();
       await postWeChatSync({ datasetId: datasetId, billId });
 
       return;
     },
     errorToast: t('common.Update Failed')
   });
+
+  // wechat_qrcode config
+  const {
+    isOpen: isOpenWeChatQRCodeModal,
+    onOpen: onOpenWeChatQRCodeModal,
+    onClose: onCloseWeChatQRCodeModal
+  } = useDisclosure();
 
   // collection list
   const [searchText, setSearchText] = useState('');
@@ -153,6 +166,7 @@ const CollectionPageContextProvider = ({ children }: { children: ReactNode }) =>
     openWebSyncConfirm: openWebSyncConfirm(onUpdateDatasetWebsiteConfig),
     onOpenWebsiteModal,
     onOpenWeChatModal,
+    onOpenWeChatQRCodeModal,
     searchText,
     setSearchText,
     collections,
@@ -197,6 +211,9 @@ const CollectionPageContextProvider = ({ children }: { children: ReactNode }) =>
           )}
           <ConfirmWebSyncModal />
         </>
+      )}
+      {datasetDetail.type === DatasetTypeEnum.weChatDataset && (
+        <>{isOpenWeChatQRCodeModal && <WeChatQRCodeModal onClose={onCloseWeChatQRCodeModal} />}</>
       )}
     </CollectionPageContext.Provider>
   );

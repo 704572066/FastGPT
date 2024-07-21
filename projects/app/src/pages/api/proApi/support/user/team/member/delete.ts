@@ -19,22 +19,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     await connectToDatabase();
 
-    const { memberId, teamId } = req.query as DelMemberProps;
+    const { tmbId } = req.query as DelMemberProps;
 
-    if (!memberId || !teamId) {
+    if (!tmbId) {
       throw new Error('参数错误');
     }
 
     // 凭证校验
     // await authApp({ req, authToken: true, appId, per: 'owner' });
-    const { tmbId } = await authCert({ req, authToken: true, per: 'owner' });
+    const { teamId } = await authCert({ req, authToken: true, per: 'owner' });
 
     await mongoSessionRun(async (session) => {
       // 转移知识库资源到创建者名下
       await MongoDataset.updateMany(
         {
           teamId: teamId,
-          tmbId: memberId
+          tmbId: tmbId
         },
         {
           $set: {
@@ -47,7 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await MongoDatasetData.updateMany(
         {
           teamId: teamId,
-          tmbId: memberId
+          tmbId: tmbId
         },
         {
           $set: {
@@ -60,7 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await MongoDatasetCollection.updateMany(
         {
           teamId: teamId,
-          tmbId: memberId
+          tmbId: tmbId
         },
         {
           $set: {
@@ -73,7 +73,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await MongoDatasetTraining.updateMany(
         {
           teamId: teamId,
-          tmbId: memberId
+          tmbId: tmbId
         },
         {
           $set: {
@@ -86,7 +86,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await MongoPlugin.updateMany(
         {
           teamId: teamId,
-          tmbId: memberId
+          tmbId: tmbId
         },
         {
           $set: {
@@ -99,7 +99,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await MongoApp.updateMany(
         {
           teamId: teamId,
-          tmbId: memberId
+          tmbId: tmbId
         },
         {
           $set: {
@@ -112,7 +112,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await MongoChatItem.updateMany(
         {
           teamId: teamId,
-          tmbId: memberId
+          tmbId: tmbId
         },
         {
           $set: {
@@ -124,7 +124,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await MongoChat.updateMany(
         {
           teamId: teamId,
-          tmbId: memberId
+          tmbId: tmbId
         },
         {
           $set: {
@@ -138,7 +138,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // 移除团队成员
       const member = await MongoTeamMember.findOne(
         {
-          _id: memberId,
+          _id: tmbId,
           teamId: teamId
         },
         '_id userId'
@@ -161,7 +161,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       await MongoTeamMember.deleteOne(
         {
-          _id: memberId,
+          _id: tmbId,
           teamId: teamId
         },
         { session }

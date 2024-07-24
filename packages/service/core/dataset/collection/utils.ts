@@ -10,6 +10,7 @@ import {
 } from '@fastgpt/global/core/dataset/constants';
 import { hashStr } from '@fastgpt/global/common/string/tools';
 import { ClientSession } from '../../../common/mongo';
+import { PushDatasetDataResponse } from '@fastgpt/global/core/dataset/api';
 
 /**
  * get all collection by top collectionId
@@ -51,29 +52,6 @@ export async function findCollectionAndChild({
   }
 
   return [collection, ...childCollections];
-}
-
-export async function getDatasetCollectionPaths({
-  parentId = ''
-}: {
-  parentId?: string;
-}): Promise<ParentTreePathItemType[]> {
-  async function find(parentId?: string): Promise<ParentTreePathItemType[]> {
-    if (!parentId) {
-      return [];
-    }
-
-    const parent = await MongoDatasetCollection.findOne({ _id: parentId }, 'name parentId');
-
-    if (!parent) return [];
-
-    const paths = await find(parent.parentId);
-    paths.push({ parentId, parentName: parent.name });
-
-    return paths;
-  }
-
-  return await find(parentId);
 }
 
 export function getCollectionUpdateTime({ name, time }: { time?: Date; name: string }) {
@@ -163,7 +141,7 @@ export const reloadCollectionChunks = async ({
   billId?: string;
   rawText?: string;
   session: ClientSession;
-}) => {
+}): Promise<PushDatasetDataResponse> => {
   const {
     title,
     rawText: newRawText,
@@ -175,7 +153,11 @@ export const reloadCollectionChunks = async ({
     newRawText: rawText
   });
 
-  if (isSameRawText) return internalUrl;
+  if (isSameRawText)
+    return {
+      insertLen: 0,
+      internalUrl: internalUrl
+    };
 
   // split data
   const { chunks } = splitText2Chunks({
@@ -190,7 +172,7 @@ export const reloadCollectionChunks = async ({
     return Promise.reject('Training model error');
   })();
 
-  await MongoDatasetTraining.insertMany(
+  const result = await MongoDatasetTraining.insertMany(
     chunks.map((item, i) => ({
       teamId: col.teamId,
       tmbId,
@@ -218,5 +200,8 @@ export const reloadCollectionChunks = async ({
     { session }
   );
 
-  return internalUrl;
+  return {
+    insertLen: result.length,
+    internalUrl: internalUrl
+  };
 };

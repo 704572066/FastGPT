@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { ModalBody, ModalFooter, Button } from '@chakra-ui/react';
 import MyModal from '@fastgpt/web/components/common/MyModal';
-import type { SelectAppItemType } from '@fastgpt/global/core/workflow/type/index.d';
+import { SelectAppItemType } from '@fastgpt/global/core/workflow/template/system/runApp/type';
 import { useTranslation } from 'next-i18next';
 import SelectOneResource from '@/components/common/folder/SelectOneResource';
 import {
@@ -62,7 +62,7 @@ const SelectAppModal = ({
       </ModalBody>
       <ModalFooter>
         <Button variant={'whiteBase'} onClick={onClose}>
-          {t('common.Cancel')}
+          {t('common:common.Cancel')}
         </Button>
         <Button
           ml={2}
@@ -73,7 +73,7 @@ const SelectAppModal = ({
             onClose();
           }}
         >
-          {t('common.Confirm')}
+          {t('common:common.Confirm')}
         </Button>
       </ModalFooter>
     </MyModal>

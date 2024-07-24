@@ -1,4 +1,5 @@
 import { Box, Button, Flex, HStack } from '@chakra-ui/react';
+import { useToast } from '@fastgpt/web/hooks/useToast';
 import React from 'react';
 import MyIcon from '@fastgpt/web/components/common/Icon';
 import { FolderIcon } from '@fastgpt/global/common/file/image/constants';
@@ -13,6 +14,8 @@ import CollaboratorContextProvider, {
 } from '../../support/permission/MemberManager/context';
 import MyTooltip from '@fastgpt/web/components/common/MyTooltip';
 import { useSystemStore } from '@/web/common/system/useSystemStore';
+import { useI18n } from '@/web/context/I18n';
+import ResumeInherit from '@/components/support/permission/ResumeInheritText';
 
 const FolderSlideCard = ({
   refreshDeps,
@@ -24,7 +27,11 @@ const FolderSlideCard = ({
   onDelete,
 
   defaultPer,
-  managePer
+  managePer,
+  isInheritPermission,
+  resumeInheritPermission,
+  hasParent,
+  refetchResource
 }: {
   refreshDeps?: any[];
   name: string;
@@ -40,9 +47,16 @@ const FolderSlideCard = ({
     onChange: (v: PermissionValueType) => Promise<any>;
   };
   managePer: MemberManagerInputPropsType;
+
+  isInheritPermission?: boolean;
+  resumeInheritPermission?: () => Promise<void>;
+  hasParent?: boolean;
+  refetchResource?: () => Promise<any>;
 }) => {
   const { t } = useTranslation();
   const { feConfigs } = useSystemStore();
+  const { commonT } = useI18n();
+  const { toast } = useToast();
 
   const { ConfirmModal, openConfirm } = useConfirm({
     type: 'delete',
@@ -73,7 +87,7 @@ const FolderSlideCard = ({
           <MyDivider my={6} />
 
           <Box>
-            <FormLabel>{t('common.Operation')}</FormLabel>
+            <FormLabel>{t('common:common.Operation')}</FormLabel>
 
             <Button
               variant={'transparentBase'}
@@ -87,7 +101,7 @@ const FolderSlideCard = ({
               mt={4}
               onClick={onMove}
             >
-              {t('common.Move')}
+              {t('common:common.Move')}
             </Button>
             {managePer.permission.isOwner && (
               <Button
@@ -104,7 +118,7 @@ const FolderSlideCard = ({
                   openConfirm(onDelete)();
                 }}
               >
-                {t('common.Delete folder')}
+                {t('common:common.Delete folder')}
               </Button>
             )}
           </Box>
@@ -116,33 +130,47 @@ const FolderSlideCard = ({
           <MyDivider my={6} />
 
           <Box>
-            <FormLabel>{t('support.permission.Permission')}</FormLabel>
+            <FormLabel>{t('common:support.permission.Permission')}</FormLabel>
+
+            {!isInheritPermission && (
+              <Box mt={2}>
+                <ResumeInherit onResume={() => resumeInheritPermission?.().then(refetchResource)} />
+              </Box>
+            )}
 
             {managePer.permission.hasManagePer && (
               <Box mt={5}>
                 <Box fontSize={'sm'} color={'myGray.500'}>
-                  {t('permission.Default permission')}
+                  {t('common:permission.Default permission')}
                 </Box>
                 <DefaultPermissionList
                   mt="1"
                   per={defaultPer.value}
                   defaultPer={defaultPer.defaultValue}
-                  onChange={defaultPer.onChange}
+                  isInheritPermission={isInheritPermission}
+                  onChange={(v) => defaultPer.onChange(v)}
+                  hasParent={hasParent}
                 />
               </Box>
             )}
             <Box mt={6}>
-              <CollaboratorContextProvider {...managePer} refreshDeps={refreshDeps}>
+              <CollaboratorContextProvider
+                {...managePer}
+                refreshDeps={refreshDeps}
+                refetchResource={refetchResource}
+                isInheritPermission={isInheritPermission}
+                hasParent={hasParent}
+              >
                 {({ MemberListCard, onOpenManageModal, onOpenAddMember }) => {
                   return (
                     <>
                       <Flex alignItems="center" justifyContent="space-between">
                         <Box fontSize={'sm'} color={'myGray.500'}>
-                          {t('permission.Collaborator')}
+                          {t('common:permission.Collaborator')}
                         </Box>
                         {managePer.permission.hasManagePer && (
                           <HStack spacing={3}>
-                            <MyTooltip label={t('permission.Manage')}>
+                            <MyTooltip label={t('common:permission.Manage')}>
                               <MyIcon
                                 w="1rem"
                                 name="common/settingLight"
@@ -151,7 +179,7 @@ const FolderSlideCard = ({
                                 onClick={onOpenManageModal}
                               />
                             </MyTooltip>
-                            <MyTooltip label={t('common.Add')}>
+                            <MyTooltip label={t('common:common.Add')}>
                               <MyIcon
                                 w="1rem"
                                 name="support/permission/collaborator"

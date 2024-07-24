@@ -10,7 +10,6 @@ import {
   Checkbox,
   ModalFooter
 } from '@chakra-ui/react';
-import { DragHandleIcon } from '@chakra-ui/icons';
 import { useRouter } from 'next/router';
 import { AppSchema } from '@fastgpt/global/core/app/type.d';
 import { useTranslation } from 'next-i18next';
@@ -28,11 +27,13 @@ import MyModal from '@fastgpt/web/components/common/MyModal';
 import { useRequest2 } from '@fastgpt/web/hooks/useRequest';
 import { postTransition2Workflow } from '@/web/core/app/api/app';
 import { AppTypeEnum } from '@fastgpt/global/core/app/constants';
+import { useSystem } from '@fastgpt/web/hooks/useSystem';
 
 const AppCard = () => {
   const router = useRouter();
   const { t } = useTranslation();
   const { appT } = useI18n();
+  const { isPc } = useSystem();
 
   const { appDetail, setAppDetail, onOpenInfoEdit, onDelApp } = useContextSelector(
     AppContext,
@@ -61,14 +62,14 @@ const AppCard = () => {
           }));
         }
       },
-      successToast: t('common.Success')
+      successToast: t('common:common.Success')
     }
   );
 
   return (
     <>
       {/* basic info */}
-      <Box px={6} py={4} position={'relative'}>
+      <Box px={[4, 6]} py={4} position={'relative'}>
         <Flex alignItems={'center'}>
           <Avatar src={appDetail.avatar} borderRadius={'md'} w={'28px'} />
           <Box ml={3} fontWeight={'bold'} fontSize={'md'} flex={'1 0 0'} color={'myGray.900'}>
@@ -85,7 +86,7 @@ const AppCard = () => {
           fontSize={'xs'}
           minH={'46px'}
         >
-          {appDetail.intro || t('core.app.tip.Add a intro to app')}
+          {appDetail.intro || t('common:core.app.tip.Add a intro to app')}
         </Box>
         <HStack alignItems={'flex-end'}>
           <Button
@@ -94,7 +95,7 @@ const AppCard = () => {
             leftIcon={<MyIcon name={'core/chat/chatLight'} w={'16px'} />}
             onClick={() => router.push(`/chat?appId=${appId}`)}
           >
-            {t('core.Chat')}
+            {t('common:core.Chat')}
           </Button>
           {appDetail.permission.hasManagePer && (
             <Button
@@ -103,7 +104,7 @@ const AppCard = () => {
               leftIcon={<MyIcon name={'common/settingLight'} w={'16px'} />}
               onClick={onOpenInfoEdit}
             >
-              {t('common.Setting')}
+              {t('common:common.Setting')}
             </Button>
           )}
           {appDetail.permission.isOwner && (
@@ -128,7 +129,7 @@ const AppCard = () => {
                       ? [
                           {
                             icon: 'core/chat/fileSelect',
-                            label: t('common.Team Tags Set'),
+                            label: t('common:common.Team Tags Set'),
                             onClick: () => setTeamTagsSet(appDetail)
                           }
                         ]
@@ -140,7 +141,7 @@ const AppCard = () => {
                     {
                       icon: 'delete',
                       type: 'danger',
-                      label: t('common.Delete'),
+                      label: t('common:common.Delete'),
                       onClick: onDelApp
                     }
                   ]
@@ -149,13 +150,15 @@ const AppCard = () => {
             />
           )}
           <Box flex={1} />
-          <MyTag
-            type="borderFill"
-            colorSchema="gray"
-            onClick={() => (appDetail.permission.hasManagePer ? onOpenInfoEdit() : undefined)}
-          >
-            <PermissionIconText defaultPermission={appDetail.defaultPermission} />
-          </MyTag>
+          {isPc && (
+            <MyTag
+              type="borderFill"
+              colorSchema="gray"
+              onClick={() => (appDetail.permission.hasManagePer ? onOpenInfoEdit() : undefined)}
+            >
+              <PermissionIconText defaultPermission={appDetail.defaultPermission} />
+            </MyTag>
+          )}
         </HStack>
       </Box>
       {TeamTagsSet && <TagsEditModal onClose={() => setTeamTagsSet(undefined)} />}
@@ -170,10 +173,10 @@ const AppCard = () => {
           </ModalBody>
           <ModalFooter>
             <Button variant={'whiteBase'} onClick={() => setTransitionCreateNew(undefined)} mr={3}>
-              {t('common.Close')}
+              {t('common:common.Close')}
             </Button>
             <Button variant={'dangerFill'} isLoading={transiting} onClick={() => onTransition()}>
-              {t('common.Confirm')}
+              {t('common:common.Confirm')}
             </Button>
           </ModalFooter>
         </MyModal>

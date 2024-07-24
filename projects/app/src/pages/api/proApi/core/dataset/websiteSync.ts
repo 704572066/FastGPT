@@ -100,7 +100,7 @@ async function crawl(
         session
       });
 
-      const internalUrl = await reloadCollectionChunks({
+      const result = await reloadCollectionChunks({
         collection: {
           ...collection.toObject(),
           datasetId: dataset
@@ -109,7 +109,7 @@ async function crawl(
         billId,
         session
       });
-      if (internalUrl) internalUrls = internalUrl;
+      if (result.internalUrl) internalUrls = result.internalUrl;
     });
 
     // const html = await fetchPageContent(url);

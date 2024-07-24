@@ -14,24 +14,28 @@ import { AppUpdateParams } from '@/global/core/app/api';
 import dynamic from 'next/dynamic';
 import { useI18n } from '@/web/context/I18n';
 import { AppTypeEnum } from '@fastgpt/global/core/app/constants';
+import { useThrottleEffect } from 'ahooks';
 const MoveModal = dynamic(() => import('@/components/common/folder/MoveModal'));
 
 type AppListContextType = {
   parentId?: string | null;
   appType: AppTypeEnum | 'ALL';
   myApps: AppListItemType[];
-  loadMyApps: () => void;
+  loadMyApps: () => Promise<AppListItemType[]>;
   isFetchingApps: boolean;
   folderDetail: AppDetailType | undefined | null;
   paths: ParentTreePathItemType[];
   onUpdateApp: (id: string, data: AppUpdateParams) => Promise<any>;
   setMoveAppId: React.Dispatch<React.SetStateAction<string | undefined>>;
+  refetchFolderDetail: () => Promise<AppDetailType | null>;
+  searchKey: string;
+  setSearchKey: React.Dispatch<React.SetStateAction<string>>;
 };
 
 export const AppListContext = createContext<AppListContextType>({
   parentId: undefined,
   myApps: [],
-  loadMyApps: function (): void {
+  loadMyApps: async function (): Promise<AppListItemType[]> {
     throw new Error('Function not implemented.');
   },
   isFetchingApps: false,
@@ -43,7 +47,14 @@ export const AppListContext = createContext<AppListContextType>({
   setMoveAppId: function (value: React.SetStateAction<string | undefined>): void {
     throw new Error('Function not implemented.');
   },
-  appType: 'ALL'
+  appType: 'ALL',
+  refetchFolderDetail: async function (): Promise<AppDetailType | null> {
+    throw new Error('Function not implemented.');
+  },
+  searchKey: '',
+  setSearchKey: function (value: React.SetStateAction<string>): void {
+    throw new Error('Function not implemented.');
+  }
 });
 
 const AppListContextProvider = ({ children }: { children: ReactNode }) => {
@@ -53,6 +64,7 @@ const AppListContextProvider = ({ children }: { children: ReactNode }) => {
     parentId?: string | null;
     type: AppTypeEnum;
   };
+  const [searchKey, setSearchKey] = useState('');
 
   const {
     data = [],
@@ -67,13 +79,13 @@ const AppListContextProvider = ({ children }: { children: ReactNode }) => {
 
         return [AppTypeEnum.folder, type];
       })();
-
-      return getMyApps({ parentId, type: formatType });
+      return getMyApps({ parentId, type: formatType, searchKey });
     },
     {
       manual: false,
-      refreshOnWindowFocus: true,
-      refreshDeps: [parentId, type]
+      refreshDeps: [searchKey, parentId, type],
+      throttleWait: 500,
+      refreshOnWindowFocus: true
     }
   );
 
@@ -129,11 +141,14 @@ const AppListContextProvider = ({ children }: { children: ReactNode }) => {
     appType: type,
     myApps: data,
     loadMyApps,
+    refetchFolderDetail,
     isFetchingApps,
     folderDetail,
     paths,
     onUpdateApp,
-    setMoveAppId
+    setMoveAppId,
+    searchKey,
+    setSearchKey
   };
   return (
     <AppListContext.Provider value={contextValue}>

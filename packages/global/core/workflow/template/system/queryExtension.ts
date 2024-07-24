@@ -3,7 +3,7 @@ import {
   FlowNodeOutputTypeEnum,
   FlowNodeTypeEnum
 } from '../../node/constant';
-import { FlowNodeTemplateType } from '../../type/index.d';
+import { FlowNodeTemplateType } from '../../type/node.d';
 import {
   WorkflowIOValueTypeEnum,
   NodeInputKeyEnum,
@@ -19,7 +19,7 @@ import { LLMModelTypeEnum } from '../../../ai/constants';
 import { getHandleConfig } from '../utils';
 
 export const AiQueryExtension: FlowNodeTemplateType = {
-  id: FlowNodeTypeEnum.chatNode,
+  id: FlowNodeTypeEnum.queryExtension,
   templateType: FlowNodeTemplateTypeEnum.other,
   flowNodeType: FlowNodeTypeEnum.queryExtension,
   sourceHandle: getHandleConfig(true, true, true, true),

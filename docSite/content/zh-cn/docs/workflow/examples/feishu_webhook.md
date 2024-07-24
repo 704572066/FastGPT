@@ -78,7 +78,7 @@ weight: 404
     },
     {
       "nodeId": "u6IAOEssxoZT",
-      "name": "工具调用(实验)",
+      "name": "工具调用",
       "intro": "通过AI模型自动选择一个或多个功能块进行调用，也可以对插件进行调用。",
       "avatar": "/imgs/workflow/tool.svg",
       "flowNodeType": "tools",
@@ -201,7 +201,7 @@ weight: 404
         "x": 1623.9214305901633,
         "y": 22.777089001645862
       },
-      "version": "481",
+      "version": "486",
       "inputs": [
         {
           "key": "system_addInputParam",

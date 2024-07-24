@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import type { RenderInputProps } from '../type';
 import { Box, Button, useDisclosure } from '@chakra-ui/react';
-import { SelectAppItemType } from '@fastgpt/global/core/workflow/type/index.d';
+import { SelectAppItemType } from '@fastgpt/global/core/workflow/template/system/runApp/type';
 import Avatar from '@/components/Avatar';
 import SelectAppModal from '../../../../SelectAppModal';
 import { useTranslation } from 'next-i18next';
@@ -51,7 +51,7 @@ const SelectAppRender = ({ item, nodeId }: RenderInputProps) => {
         <Box onClick={onOpenSelectApp}>
           {!value ? (
             <Button variant={'whiteFlow'} w={'100%'}>
-              {t('core.module.Select app')}
+              {t('common:core.module.Select app')}
             </Button>
           ) : (
             <Button

@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { NodeProps } from 'reactflow';
 import NodeCard from './render/NodeCard';
-import { FlowNodeItemType } from '@fastgpt/global/core/workflow/type/index.d';
+import { FlowNodeItemType } from '@fastgpt/global/core/workflow/type/node.d';
 import Container from '../components/Container';
 import RenderInput from './render/RenderInput';
 import RenderOutput from './render/RenderOutput';
@@ -21,24 +21,23 @@ const NodeSimple = ({
   const { t } = useTranslation();
   const splitToolInputs = useContextSelector(WorkflowContext, (ctx) => ctx.splitToolInputs);
   const { nodeId, inputs, outputs } = data;
-  const { toolInputs, commonInputs } = splitToolInputs(inputs, nodeId);
+  const { isTool, commonInputs } = splitToolInputs(inputs, nodeId);
 
   const filterHiddenInputs = useMemo(() => commonInputs.filter((item) => true), [commonInputs]);
 
   return (
     <NodeCard minW={minW} maxW={maxW} selected={selected} {...data}>
-      {toolInputs.length > 0 && (
+      {isTool && (
         <>
           <Container>
-            <IOTitle text={t('core.module.tool.Tool input')} />
-            <RenderToolInput nodeId={nodeId} inputs={toolInputs} />
+            <RenderToolInput nodeId={nodeId} inputs={inputs} />
           </Container>
         </>
       )}
       {filterHiddenInputs.length > 0 && (
         <>
           <Container>
-            <IOTitle text={t('common.Input')} />
+            <IOTitle text={t('common:common.Input')} />
             <RenderInput nodeId={nodeId} flowInputList={commonInputs} />
           </Container>
         </>
@@ -46,7 +45,7 @@ const NodeSimple = ({
       {outputs.filter((output) => output.type !== FlowNodeOutputTypeEnum.hidden).length > 0 && (
         <>
           <Container>
-            <IOTitle text={t('common.Output')} />
+            <IOTitle text={t('common:common.Output')} />
             <RenderOutput nodeId={nodeId} flowOutputList={outputs} />
           </Container>
         </>

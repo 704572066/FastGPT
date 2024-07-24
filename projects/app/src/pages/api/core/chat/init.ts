@@ -11,6 +11,7 @@ import { DispatchNodeResponseKeyEnum } from '@fastgpt/global/core/workflow/runti
 import { getAppLatestVersion } from '@fastgpt/service/core/app/controller';
 import { NextAPI } from '@/service/middleware/entry';
 import { ReadPermissionVal } from '@fastgpt/global/support/permission/constant';
+import { FlowNodeTypeEnum } from '@fastgpt/global/core/workflow/node/constant';
 
 async function handler(
   req: NextApiRequest,
@@ -42,7 +43,7 @@ async function handler(
   }
 
   // get app and history
-  const [{ history }, { nodes }] = await Promise.all([
+  const [{ histories }, { nodes }] = await Promise.all([
     getChatItems({
       appId,
       chatId,
@@ -53,6 +54,8 @@ async function handler(
     }),
     getAppLatestVersion(app._id, app)
   ]);
+  const pluginInputs =
+    app?.modules?.find((node) => node.flowNodeType === FlowNodeTypeEnum.pluginInput)?.inputs ?? [];
 
   return {
     chatId,
@@ -60,7 +63,7 @@ async function handler(
     title: chat?.title || '新对话',
     userAvatar: undefined,
     variables: chat?.variables || {},
-    history,
+    history: histories,
     app: {
       chatConfig: getAppChatConfig({
         chatConfig: app.chatConfig,
@@ -72,7 +75,9 @@ async function handler(
       chatModels: getChatModelNameListByModules(nodes),
       name: app.name,
       avatar: app.avatar,
-      intro: app.intro
+      intro: app.intro,
+      type: app.type,
+      pluginInputs
     }
   };
 }

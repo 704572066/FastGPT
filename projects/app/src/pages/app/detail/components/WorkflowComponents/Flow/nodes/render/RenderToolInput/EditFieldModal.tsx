@@ -13,7 +13,6 @@ import {
   Textarea
 } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
-import { defaultEditFormData } from './constants';
 import MySelect from '@fastgpt/web/components/common/MySelect';
 import { useRequest } from '@fastgpt/web/hooks/useRequest';
 import { useToast } from '@fastgpt/web/hooks/useToast';
@@ -21,6 +20,8 @@ import { FlowNodeInputItemType } from '@fastgpt/global/core/workflow/type/io.d';
 import { useContextSelector } from 'use-context-selector';
 import { WorkflowContext } from '@/pages/app/detail/components/WorkflowComponents/context';
 import { fnValueTypeSelect } from '@/web/core/workflow/constants/dataType';
+import { WorkflowIOValueTypeEnum } from '@fastgpt/global/core/workflow/constants';
+import { FlowNodeInputTypeEnum } from '@fastgpt/global/core/workflow/node/constant';
 
 const EditFieldModal = ({
   defaultValue = defaultEditFormData,
@@ -38,8 +39,11 @@ const EditFieldModal = ({
 
   const { mutate: onclickSubmit } = useRequest({
     mutationFn: async (e: FlowNodeInputItemType) => {
+      e.key = e.key.trim();
+
       const inputConfig: FlowNodeInputItemType = {
         ...e,
+        description: e.toolDescription,
         label: e.key
       };
       if (defaultValue.key) {
@@ -84,11 +88,11 @@ const EditFieldModal = ({
     <MyModal isOpen iconSrc="modal/edit" title={'工具字段参数配置'} onClose={onClose}>
       <ModalBody>
         <Flex alignItems={'center'} mb={5}>
-          <Box flex={'0 0 80px'}>{t('common.Require Input')}</Box>
+          <Box flex={'0 0 80px'}>{t('common:common.Require Input')}</Box>
           <Switch {...register('required')} />
         </Flex>
         <Flex alignItems={'center'} mb={5}>
-          <Box flex={'0 0 80px'}>{t('core.module.Data Type')}</Box>
+          <Box flex={'0 0 80px'}>{t('common:core.module.Data Type')}</Box>
           <Box flex={'1 0 0'}>
             <MySelect
               list={fnValueTypeSelect}
@@ -100,7 +104,7 @@ const EditFieldModal = ({
           </Box>
         </Flex>
         <Flex alignItems={'center'} mb={5}>
-          <Box flex={'0 0 80px'}>{t('core.module.Field Name')}</Box>
+          <Box flex={'0 0 80px'}>{t('common:core.module.Field Name')}</Box>
           <Input
             bg={'myGray.50'}
             {...register('key', {
@@ -113,7 +117,7 @@ const EditFieldModal = ({
           />
         </Flex>
         <Box mb={5}>
-          <Box flex={'0 0 80px'}>{t('core.module.Field Description')}</Box>
+          <Box flex={'0 0 80px'}>{t('common:core.module.Field Description')}</Box>
           <Textarea
             bg={'myGray.50'}
             rows={5}
@@ -125,10 +129,10 @@ const EditFieldModal = ({
       </ModalBody>
       <ModalFooter>
         <Button variant={'whiteBase'} mr={2} onClick={onClose}>
-          {t('common.Close')}
+          {t('common:common.Close')}
         </Button>
         <Button onClick={handleSubmit((data) => onclickSubmit(data), onclickSubmitError)}>
-          {t('common.Confirm')}
+          {t('common:common.Confirm')}
         </Button>
       </ModalFooter>
     </MyModal>
@@ -136,3 +140,17 @@ const EditFieldModal = ({
 };
 
 export default React.memo(EditFieldModal);
+
+export const defaultEditFormData: FlowNodeInputItemType = {
+  valueType: WorkflowIOValueTypeEnum.string,
+  renderTypeList: [FlowNodeInputTypeEnum.reference],
+  key: '',
+  label: '',
+  toolDescription: '',
+  required: true,
+  canEdit: true,
+  customInputConfig: {
+    selectValueTypeList: Object.values(fnValueTypeSelect).map((item) => item.value),
+    showDescription: true
+  }
+};

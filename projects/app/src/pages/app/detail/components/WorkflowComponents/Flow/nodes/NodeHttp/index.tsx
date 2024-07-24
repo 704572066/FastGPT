@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { NodeProps } from 'reactflow';
 import NodeCard from '../render/NodeCard';
-import { FlowNodeItemType } from '@fastgpt/global/core/workflow/type/index.d';
+import { FlowNodeItemType } from '@fastgpt/global/core/workflow/type/node.d';
 import Container from '../../components/Container';
 import RenderInput from '../render/RenderInput';
 import RenderOutput from '../render/RenderOutput';
@@ -106,8 +106,12 @@ const RenderHttpMethodAndUrl = React.memo(function RenderHttpMethodAndUrl({
 
   const { isOpen: isOpenCurl, onOpen: onOpenCurl, onClose: onCloseCurl } = useDisclosure();
 
-  const requestMethods = inputs.find((item) => item.key === NodeInputKeyEnum.httpMethod);
-  const requestUrl = inputs.find((item) => item.key === NodeInputKeyEnum.httpReqUrl);
+  const requestMethods = inputs.find(
+    (item) => item.key === NodeInputKeyEnum.httpMethod
+  ) as FlowNodeInputItemType;
+  const requestUrl = inputs.find(
+    (item) => item.key === NodeInputKeyEnum.httpReqUrl
+  ) as FlowNodeInputItemType;
 
   const onChangeUrl = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChangeNode({
@@ -167,7 +171,7 @@ const RenderHttpMethodAndUrl = React.memo(function RenderHttpMethodAndUrl({
 
       toast({
         status: 'success',
-        title: t('core.module.http.Url and params have been split')
+        title: t('common:core.module.http.Url and params have been split')
       });
     }
   };
@@ -176,10 +180,10 @@ const RenderHttpMethodAndUrl = React.memo(function RenderHttpMethodAndUrl({
     <Box>
       <Box mb={2} display={'flex'} justifyContent={'space-between'}>
         <Box fontWeight={'medium'} color={'myGray.600'}>
-          {t('core.module.Http request settings')}
+          {t('common:core.module.Http request settings')}
         </Box>
         <Button variant={'link'} onClick={onOpenCurl}>
-          {t('core.module.http.curl import')}
+          {t('common:core.module.http.curl import')}
         </Button>
       </Box>
       <Flex alignItems={'center'} className="nodrag">
@@ -229,7 +233,7 @@ const RenderHttpMethodAndUrl = React.memo(function RenderHttpMethodAndUrl({
           h={'34px'}
           bg={'white'}
           value={requestUrl?.value || ''}
-          placeholder={t('core.module.input.label.Http Request Url')}
+          placeholder={t('common:core.module.input.label.Http Request Url')}
           fontSize={'xs'}
           onChange={onChangeUrl}
           onBlur={onBlurUrl}
@@ -251,6 +255,8 @@ export function RenderHttpProps({
   const { t } = useTranslation();
   const [selectedTab, setSelectedTab] = useState(TabEnum.params);
   const nodeList = useContextSelector(WorkflowContext, (v) => v.nodeList);
+  const getNodeDynamicInputs = useContextSelector(WorkflowContext, (v) => v.getNodeDynamicInputs);
+
   const { appDetail } = useContextSelector(AppContext, (v) => v);
 
   const requestMethods = inputs.find((item) => item.key === NodeInputKeyEnum.httpMethod)?.value;
@@ -269,17 +275,10 @@ export function RenderHttpProps({
       t
     });
 
-    const moduleVariables = formatEditorVariablePickerIcon(
-      inputs
-        .filter((input) => input.canEdit || input.toolDescription)
-        .map((item) => ({
-          key: item.key,
-          label: item.label
-        }))
-    );
+    const nodeVariables = formatEditorVariablePickerIcon(getNodeDynamicInputs(nodeId));
 
-    return [...moduleVariables, ...globalVariables];
-  }, [appDetail.chatConfig, inputs, nodeList, t]);
+    return [...nodeVariables, ...globalVariables];
+  }, [appDetail.chatConfig, getNodeDynamicInputs, nodeId, nodeList, t]);
 
   const variableText = useMemo(() => {
     return variables
@@ -303,7 +302,7 @@ export function RenderHttpProps({
     return (
       <Box>
         <Flex alignItems={'center'} mb={2} fontWeight={'medium'} color={'myGray.600'}>
-          {t('core.module.Http request props')}
+          {t('common:core.module.Http request props')}
           <QuestionTip
             ml={1}
             label={t('core.module.http.Props tip', { variable: variableText })}
@@ -425,7 +424,7 @@ const RenderForm = ({
           setUpdateTrigger((prev) => !prev);
           toast({
             status: 'warning',
-            title: t('core.module.http.Key cannot be empty')
+            title: t('common:core.module.http.Key cannot be empty')
           });
           return prevList;
         }
@@ -434,7 +433,7 @@ const RenderForm = ({
           setUpdateTrigger((prev) => !prev);
           toast({
             status: 'warning',
-            title: t('core.module.http.Key already exists')
+            title: t('common:core.module.http.Key already exists')
           });
           return prevList;
         }
@@ -457,7 +456,7 @@ const RenderForm = ({
           setUpdateTrigger((prev) => !prev);
           toast({
             status: 'warning',
-            title: t('core.module.http.Key already exists')
+            title: t('common:core.module.http.Key already exists')
           });
           return prevList;
         }
@@ -477,10 +476,10 @@ const RenderForm = ({
             <Thead>
               <Tr>
                 <Th px={2} borderBottomLeftRadius={'none !important'}>
-                  {t('core.module.http.Props name')}
+                  {t('common:core.module.http.Props name')}
                 </Th>
                 <Th px={2} borderBottomRadius={'none !important'}>
-                  {t('core.module.http.Props value')}
+                  {t('common:core.module.http.Props value')}
                 </Th>
               </Tr>
             </Thead>
@@ -495,7 +494,7 @@ const RenderForm = ({
                         handleKeyChange(index, value);
                         setUpdateTrigger((prev) => !prev);
                       }}
-                      placeholder={t('core.module.http.Props name')}
+                      placeholder={t('common:core.module.http.Props name')}
                       value={item.key}
                       variables={leftVariables}
                       onBlur={(val) => {
@@ -507,7 +506,7 @@ const RenderForm = ({
                   <Td p={0}>
                     <Box display={'flex'} alignItems={'center'}>
                       <HttpInput
-                        placeholder={t('core.module.http.Props value')}
+                        placeholder={t('common:core.module.http.Props value')}
                         value={item.value}
                         variables={variables}
                         onBlur={(val) => {
@@ -542,7 +541,7 @@ const RenderForm = ({
                       handleAddNewProps(val);
                       setUpdateTrigger((prev) => !prev);
                     }}
-                    placeholder={t('core.module.http.Add props')}
+                    placeholder={t('common:core.module.http.Add props')}
                     value={''}
                     variables={leftVariables}
                     updateTrigger={updateTrigger}
@@ -598,7 +597,7 @@ const RenderJson = ({
           defaultHeight={200}
           resize
           value={input.value}
-          placeholder={t('core.module.template.http body placeholder')}
+          placeholder={t('common:core.module.template.http body placeholder')}
           onChange={(e) => {
             startSts(() => {
               onChangeNode({
@@ -637,7 +636,7 @@ const NodeHttp = ({ data, selected }: NodeProps<FlowNodeItemType>) => {
   const { t } = useTranslation();
   const { nodeId, inputs, outputs } = data;
   const splitToolInputs = useContextSelector(WorkflowContext, (v) => v.splitToolInputs);
-  const { toolInputs, commonInputs, isTool } = splitToolInputs(inputs, nodeId);
+  const { commonInputs, isTool } = splitToolInputs(inputs, nodeId);
 
   const HttpMethodAndUrl = useMemoizedFn(() => (
     <RenderHttpMethodAndUrl nodeId={nodeId} inputs={inputs} />
@@ -656,14 +655,13 @@ const NodeHttp = ({ data, selected }: NodeProps<FlowNodeItemType>) => {
       {isTool && (
         <>
           <Container>
-            <IOTitle text={t('core.module.tool.Tool input')} />
-            <RenderToolInput nodeId={nodeId} inputs={toolInputs} canEdit />
+            <RenderToolInput nodeId={nodeId} inputs={inputs} />
           </Container>
         </>
       )}
       <>
         <Container>
-          <IOTitle text={t('common.Input')} />
+          <IOTitle text={t('common:common.Input')} />
           <RenderInput
             nodeId={nodeId}
             flowInputList={commonInputs}
@@ -673,7 +671,7 @@ const NodeHttp = ({ data, selected }: NodeProps<FlowNodeItemType>) => {
       </>
       <>
         <Container>
-          <IOTitle text={t('common.Output')} />
+          <IOTitle text={t('common:common.Output')} />
           <RenderOutput flowOutputList={outputs} nodeId={nodeId} />
         </Container>
       </>

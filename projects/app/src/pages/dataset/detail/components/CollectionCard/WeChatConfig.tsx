@@ -66,7 +66,7 @@ const WeChatConfigModal = ({
         <Box mt={2}>
           <Box>{t('core.dataset.weChat.Name')}</Box>
           <Input
-            placeholder={t('core.dataset.collection.WeChat Name')}
+            placeholder={t('common:core.dataset.collection.WeChat Name')}
             {...register('url', {
               required: true
             })}

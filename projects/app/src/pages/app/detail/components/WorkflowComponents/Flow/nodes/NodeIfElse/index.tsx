@@ -4,7 +4,7 @@ import { useTranslation } from 'next-i18next';
 import { Box, Button, Flex } from '@chakra-ui/react';
 import { NodeInputKeyEnum } from '@fastgpt/global/core/workflow/constants';
 import { NodeProps, Position } from 'reactflow';
-import { FlowNodeItemType } from '@fastgpt/global/core/workflow/type';
+import { FlowNodeItemType } from '@fastgpt/global/core/workflow/type/node';
 import { IfElseListItemType } from '@fastgpt/global/core/workflow/template/system/ifElse/type';
 import { useContextSelector } from 'use-context-selector';
 import { WorkflowContext } from '../../../context';
@@ -128,7 +128,7 @@ const NodeIfElse = ({ data, selected }: NodeProps<FlowNodeItemType>) => {
             ]);
           }}
         >
-          {t('core.module.input.Add Branch')}
+          {t('common:core.module.input.Add Branch')}
         </Button>
       </Box>
     </NodeCard>

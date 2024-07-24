@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { NodeProps } from 'reactflow';
 import NodeCard from './render/NodeCard';
-import { FlowNodeItemType } from '@fastgpt/global/core/workflow/type/index.d';
+import { FlowNodeItemType } from '@fastgpt/global/core/workflow/type/node.d';
 import Container from '../components/Container';
 import RenderOutput from './render/RenderOutput';
 import IOTitle from '../components/IOTitle';
@@ -50,11 +50,11 @@ const NodeStart = ({ data, selected }: NodeProps<FlowNodeItemType>) => {
       {...data}
     >
       <Container>
-        <IOTitle text={t('common.Output')} />
+        <IOTitle text={t('common:common.Output')} />
         <RenderOutput nodeId={nodeId} flowOutputList={outputs} />
       </Container>
       <Container>
-        <IOTitle text={t('core.module.Variable')} />
+        <IOTitle text={t('common:core.module.Variable')} />
         <RenderOutput nodeId={nodeId} flowOutputList={variablesOutputs} />
       </Container>
     </NodeCard>

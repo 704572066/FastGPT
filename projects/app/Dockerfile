@@ -1,17 +1,13 @@
 # --------- install dependence -----------
-FROM node:18.17-alpine AS mainDeps
+FROM node:20.14.0-alpine AS mainDeps
 WORKDIR /app
 
 ARG proxy
 
 RUN [ -z "$proxy" ] || sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories
-RUN apk add --no-cache libc6-compat && npm install -g pnpm@8.6.0
+RUN apk add --no-cache libc6-compat && npm install -g pnpm@9.4.0
 # if proxy exists, set proxy
 RUN [ -z "$proxy" ] || pnpm config set registry https://registry.npmmirror.com
-
-
-# 设置 Puppeteer 环境变量以使用 Chromium
-# ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
 
 # copy packages and one project
 COPY pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
@@ -22,9 +18,8 @@ RUN [ -f pnpm-lock.yaml ] || (echo "Lockfile not found." && exit 1)
 RUN pnpm config set registry http://registry.npm.taobao.org/
 RUN pnpm i
 
-
 # --------- builder -----------
-FROM node:18.17-alpine AS builder
+FROM node:20.14.0-alpine AS builder
 WORKDIR /app
 
 ARG proxy
@@ -38,7 +33,7 @@ COPY --from=mainDeps /app/projects/app/node_modules ./projects/app/node_modules
 
 RUN [ -z "$proxy" ] || sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories
 
-RUN apk add --no-cache libc6-compat && npm install -g pnpm@8.6.0
+RUN apk add --no-cache libc6-compat && npm install -g pnpm@9.4.0
 
 
 
@@ -46,7 +41,7 @@ ENV NODE_OPTIONS="--max-old-space-size=8192"
 RUN pnpm --filter=app build
 
 # --------- runner -----------
-FROM node:18.17-alpine AS runner
+FROM node:20.14.0-alpine AS runner
 WORKDIR /app
 
 ARG proxy
@@ -58,26 +53,6 @@ RUN adduser --system --uid 1001 nextjs
 RUN [ -z "$proxy" ] || sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories
 RUN apk add --no-cache curl ca-certificates \
   && update-ca-certificates
-
-
-# 运行时 安装 Chromium
-# RUN apk add --no-cache chromium
-# Install dependencies and Chromium
-# RUN apk update && \
-#     apk add --no-cache \
-#     chromium \
-#     nss \
-#     freetype \
-#     freetype-dev \
-#     harfbuzz \
-#     ca-certificates \
-#     ttf-freefont \
-#     bash \
-#     udev \
-#     chromium-chromedriver \
-#     dumb-init
-# Install the latest Chromium binariess
-# RUN yum install chromium
 
 # copy running files
 COPY --from=builder /app/projects/app/public /app/projects/app/public

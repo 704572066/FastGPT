@@ -102,4 +102,5 @@ export type PushDatasetDataProps = {
 };
 export type PushDatasetDataResponse = {
   insertLen: number;
+  internalUrl?: string[];
 };

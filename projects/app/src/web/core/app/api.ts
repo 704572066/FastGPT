@@ -8,7 +8,10 @@ import type { ListAppBody } from '@/pages/api/core/app/list';
 /**
  * 获取模型列表
  */
-export const getMyApps = (data?: ListAppBody) => POST<AppListItemType[]>('/core/app/list', data);
+export const getMyApps = (data?: ListAppBody) =>
+  POST<AppListItemType[]>('/core/app/list', data, {
+    maxQuantity: 1
+  });
 
 /**
  * 创建一个模型
@@ -34,3 +37,6 @@ export const putAppById = (id: string, data: AppUpdateParams) =>
 
 // =================== chat logs
 export const getAppChatLogs = (data: GetAppChatLogsParams) => POST(`/core/app/getChatLogs`, data);
+
+export const resumeInheritPer = (appId: string) =>
+  GET(`/core/app/resumeInheritPermission`, { appId });

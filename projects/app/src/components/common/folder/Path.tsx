@@ -14,7 +14,7 @@ const FolderPath = (props: {
   const { t } = useTranslation();
   const {
     paths,
-    rootName = t('common.folder.Root Path'),
+    rootName = t('common:common.folder.Root Path'),
     FirstPathDom,
     onClick,
     fontSize,
@@ -39,7 +39,7 @@ const FolderPath = (props: {
       {concatPaths.map((item, i) => (
         <Flex key={item.parentId || i} alignItems={'center'}>
           <Box
-            fontSize={['sm', fontSize || 'sm']}
+            fontSize={['xs', fontSize || 'sm']}
             py={0.5}
             px={1.5}
             borderRadius={'md'}

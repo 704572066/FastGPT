@@ -22,14 +22,16 @@ import {
 import FillRowTabs from '@fastgpt/web/components/common/Tabs/FillRowTabs';
 import { useRequest, useRequest2 } from '@fastgpt/web/hooks/useRequest';
 import EmptyTip from '@fastgpt/web/components/common/EmptyTip';
-import { FlowNodeTemplateType } from '@fastgpt/global/core/workflow/type/index.d';
+import {
+  FlowNodeTemplateType,
+  NodeTemplateListItemType
+} from '@fastgpt/global/core/workflow/type/node.d';
 import Avatar from '@/components/Avatar';
 import MyIcon from '@fastgpt/web/components/common/Icon';
 import { AddIcon } from '@chakra-ui/icons';
 import { getPreviewPluginNode, getSystemPlugTemplates } from '@/web/core/app/api/plugin';
 import MyBox from '@fastgpt/web/components/common/MyBox';
 import { WorkflowIOValueTypeEnum } from '@fastgpt/global/core/workflow/constants';
-import { PluginTypeEnum } from '@fastgpt/global/core/plugin/constants';
 import { useForm } from 'react-hook-form';
 import JsonEditor from '@fastgpt/web/components/common/Textarea/JsonEditor';
 import { FlowNodeInputTypeEnum } from '@fastgpt/global/core/workflow/node/constant';
@@ -43,7 +45,7 @@ import FolderPath from '@/components/common/folder/Path';
 type Props = {
   selectedTools: FlowNodeTemplateType[];
   onAddTool: (tool: FlowNodeTemplateType) => void;
-  onRemoveTool: (tool: FlowNodeTemplateType) => void;
+  onRemoveTool: (tool: NodeTemplateListItemType) => void;
 };
 
 enum TemplateTypeEnum {
@@ -76,7 +78,7 @@ const ToolSelectModal = ({ onClose, ...props }: Props & { onClose: () => void })
       manual: false,
       throttleWait: 300,
       refreshDeps: [templateType, searchKey, parentId],
-      errorToast: t('core.module.templates.Load plugin error')
+      errorToast: t('common:core.module.templates.Load plugin error')
     }
   );
 
@@ -88,7 +90,7 @@ const ToolSelectModal = ({ onClose, ...props }: Props & { onClose: () => void })
   return (
     <MyModal
       isOpen
-      title={t('core.app.Tool call')}
+      title={t('common:core.app.Tool call')}
       iconSrc="core/app/toolCall"
       onClose={onClose}
       maxW={['90vw', '700px']}
@@ -101,12 +103,12 @@ const ToolSelectModal = ({ onClose, ...props }: Props & { onClose: () => void })
           list={[
             {
               icon: 'core/modules/teamPlugin',
-              label: t('core.app.ToolCall.Team'),
+              label: t('common:core.app.ToolCall.Team'),
               value: TemplateTypeEnum.teamPlugin
             },
             {
               icon: 'core/modules/systemPlugin',
-              label: t('core.app.ToolCall.System'),
+              label: t('common:core.app.ToolCall.System'),
               value: TemplateTypeEnum.systemPlugin
             }
           ]}
@@ -121,7 +123,7 @@ const ToolSelectModal = ({ onClose, ...props }: Props & { onClose: () => void })
           </InputLeftElement>
           <Input
             bg={'myGray.50'}
-            placeholder={t('plugin.Search plugin')}
+            placeholder={t('common:plugin.Search plugin')}
             onChange={(e) => setSearchKey(e.target.value)}
           />
         </InputGroup>
@@ -160,7 +162,7 @@ const RenderList = React.memo(function RenderList({
   onRemoveTool,
   setParentId
 }: Props & {
-  templates: FlowNodeTemplateType[];
+  templates: NodeTemplateListItemType[];
   isLoadingData: boolean;
   setParentId: React.Dispatch<React.SetStateAction<ParentIdType>>;
 }) {
@@ -170,28 +172,9 @@ const RenderList = React.memo(function RenderList({
 
   const { register, getValues, setValue, handleSubmit, reset } = useForm<Record<string, any>>({});
 
-  const checkToolInputValid = useCallback((tool: FlowNodeTemplateType) => {
-    for (const input of tool.inputs) {
-      const renderType = input.renderTypeList?.[input.selectedTypeIndex || 0];
-      if (renderType === FlowNodeInputTypeEnum.addInputParam) {
-        return false;
-      }
-    }
-    return true;
-  }, []);
-
-  const filterValidTools = useMemo(
-    () => templates.filter(checkToolInputValid),
-    [checkToolInputValid, templates]
-  );
-
   const { mutate: onClickAdd, isLoading } = useRequest({
     mutationFn: async (template: FlowNodeTemplateType) => {
       const res = await getPreviewPluginNode({ appId: template.id });
-
-      if (!checkToolInputValid(res)) {
-        return Promise.reject(t('core.app.ToolCall.This plugin cannot be called as a tool'));
-      }
 
       // All input is tool params
       if (res.inputs.every((input) => input.toolDescription)) {
@@ -201,15 +184,15 @@ const RenderList = React.memo(function RenderList({
         setConfigTool(res);
       }
     },
-    errorToast: t('core.module.templates.Load plugin error')
+    errorToast: t('common:core.module.templates.Load plugin error')
   });
 
-  return filterValidTools.length === 0 && !isLoadingData ? (
-    <EmptyTip text={t('core.app.ToolCall.No plugin')} />
+  return templates.length === 0 && !isLoadingData ? (
+    <EmptyTip text={t('common:core.app.ToolCall.No plugin')} />
   ) : (
     <MyBox>
-      {filterValidTools.map((item, i) => {
-        const selected = selectedTools.some((tool) => tool.pluginId === item.pluginId);
+      {templates.map((item, i) => {
+        const selected = selectedTools.some((tool) => tool.pluginId === item.id);
 
         return (
           <Flex
@@ -231,10 +214,10 @@ const RenderList = React.memo(function RenderList({
               borderRadius={'0'}
             />
             <Box ml={5} flex={'1 0 0'}>
-              <Box color={'black'}>{t(item.name)}</Box>
+              <Box color={'black'}>{t(item.name as any)}</Box>
               {item.intro && (
                 <Box className="textEllipsis3" color={'myGray.500'} fontSize={'xs'}>
-                  {t(item.intro)}
+                  {t(item.intro as any)}
                 </Box>
               )}
             </Box>
@@ -245,12 +228,11 @@ const RenderList = React.memo(function RenderList({
                 leftIcon={<MyIcon name={'delete'} w={'14px'} />}
                 onClick={() => onRemoveTool(item)}
               >
-                {t('common.Remove')}
+                {t('common:common.Remove')}
               </Button>
-            ) : item.pluginType === PluginTypeEnum.folder ||
-              item.pluginType === AppTypeEnum.httpPlugin ? (
+            ) : item.isFolder ? (
               <Button size={'sm'} variant={'whiteBase'} onClick={() => setParentId(item.id)}>
-                {t('common.Open')}
+                {t('common:common.Open')}
               </Button>
             ) : (
               <Button
@@ -260,7 +242,7 @@ const RenderList = React.memo(function RenderList({
                 isLoading={isLoading}
                 onClick={() => onClickAdd(item)}
               >
-                {t('common.Add')}
+                {t('common:common.Add')}
               </Button>
             )}
           </Flex>
@@ -269,7 +251,7 @@ const RenderList = React.memo(function RenderList({
       {!!configTool && (
         <MyModal
           isOpen
-          title={t('core.app.ToolCall.Parameter setting')}
+          title={t('common:core.app.ToolCall.Parameter setting')}
           iconSrc="core/app/toolCall"
           overflow={'auto'}
         >
@@ -282,7 +264,7 @@ const RenderList = React.memo(function RenderList({
                 return (
                   <Box key={input.key} _notLast={{ mb: 4 }} px={1}>
                     <Flex position={'relative'} mb={1} alignItems={'center'}>
-                      {t(input.debugLabel || input.label)}
+                      {t(input.debugLabel || (input.label as any))}
                       {input.description && <QuestionTip label={input.description} ml={1} />}
                     </Flex>
                     {(() => {
@@ -292,7 +274,7 @@ const RenderList = React.memo(function RenderList({
                             {...register(input.key, {
                               required
                             })}
-                            placeholder={t(input.placeholder || '')}
+                            placeholder={t(input.placeholder || ('' as any))}
                             bg={'myGray.50'}
                           />
                         );
@@ -326,7 +308,7 @@ const RenderList = React.memo(function RenderList({
                       return (
                         <JsonEditor
                           bg={'myGray.50'}
-                          placeholder={t(input.placeholder || '')}
+                          placeholder={t(input.placeholder || ('' as any))}
                           resize
                           value={getValues(input.key)}
                           onChange={(e) => {
@@ -341,7 +323,7 @@ const RenderList = React.memo(function RenderList({
           </ModalBody>
           <ModalFooter gap={6}>
             <Button onClick={onCloseConfigTool} variant={'whiteBase'}>
-              {t('common.Cancel')}
+              {t('common:common.Cancel')}
             </Button>
             <Button
               variant={'primary'}
@@ -356,7 +338,7 @@ const RenderList = React.memo(function RenderList({
                 onCloseConfigTool();
               })}
             >
-              {t('common.Confirm')}
+              {t('common:common.Confirm')}
             </Button>
           </ModalFooter>
         </MyModal>

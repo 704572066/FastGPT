@@ -14,7 +14,7 @@ import { usePagination } from '@fastgpt/web/hooks/usePagination';
 import { DatasetCollectionsListItemType } from '@/global/core/dataset/type';
 import { useRouter } from 'next/router';
 import { DatasetPageContext } from '@/web/core/dataset/context/datasetPageContext';
-// import puppeteer from 'puppeteer';
+
 const WebSiteConfigModal = dynamic(() => import('./WebsiteConfig'));
 const WeChatConfigModal = dynamic(() => import('./WeChatConfig'));
 const WeChatQRCodeModal = dynamic(() => import('./WeChatQRCode'));
@@ -77,7 +77,7 @@ const CollectionPageContextProvider = ({ children }: { children: ReactNode }) =>
 
   // website config
   const { openConfirm: openWebSyncConfirm, ConfirmModal: ConfirmWebSyncModal } = useConfirm({
-    content: t('core.dataset.collection.Start Sync Tip')
+    content: t('common:core.dataset.collection.Start Sync Tip')
   });
   const {
     isOpen: isOpenWebsiteModal,
@@ -94,14 +94,14 @@ const CollectionPageContextProvider = ({ children }: { children: ReactNode }) =>
         status: DatasetStatusEnum.syncing
       });
       const billId = await postCreateTrainingUsage({
-        name: t('core.dataset.training.Website Sync'),
+        name: t('common:core.dataset.training.Website Sync'),
         datasetId: datasetId
       });
       await postWebsiteSync({ datasetId: datasetId, billId });
 
       return;
     },
-    errorToast: t('common.Update Failed')
+    errorToast: t('common:common.Update Failed')
   });
 
   // wechat config
@@ -120,7 +120,7 @@ const CollectionPageContextProvider = ({ children }: { children: ReactNode }) =>
         status: DatasetStatusEnum.syncing
       });
       const billId = await postCreateTrainingUsage({
-        name: t('core.dataset.training.Website Sync'),
+        name: t('common:core.dataset.training.Website Sync'),
         datasetId: datasetId
       });
       onOpenWeChatQRCodeModal();
@@ -128,7 +128,7 @@ const CollectionPageContextProvider = ({ children }: { children: ReactNode }) =>
 
       return;
     },
-    errorToast: t('common.Update Failed')
+    errorToast: t('common:common.Update Failed')
   });
 
   // wechat_qrcode config

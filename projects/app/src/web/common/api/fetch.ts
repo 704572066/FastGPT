@@ -1,9 +1,8 @@
 import { SseResponseEventEnum } from '@fastgpt/global/core/workflow/runtime/constants';
 import { getErrText } from '@fastgpt/global/common/error/utils';
 import type { ChatHistoryItemResType } from '@fastgpt/global/core/chat/type.d';
-import type { StartChatFnProps } from '@/components/ChatBox/type.d';
+import type { StartChatFnProps } from '@/components/core/chat/ChatContainer/type';
 import { DispatchNodeResponseKeyEnum } from '@fastgpt/global/core/workflow/runtime/constants';
-import dayjs from 'dayjs';
 import {
   // refer to https://github.com/ChatGPTNextWeb/ChatGPT-Next-Web
   EventStreamContentType,
@@ -11,6 +10,7 @@ import {
 } from '@fortaine/fetch-event-source';
 import { TeamErrEnum } from '@fastgpt/global/common/error/code/team';
 import { useSystemStore } from '../system/useSystemStore';
+import { formatTime2YMDHMW } from '@fastgpt/global/common/string/time';
 
 type StreamFetchProps = {
   url?: string;
@@ -108,7 +108,7 @@ export const streamFetch = ({
     try {
       // auto complete variables
       const variables = data?.variables || {};
-      variables.cTime = dayjs().format('YYYY-MM-DD HH:mm:ss dddd');
+      variables.cTime = formatTime2YMDHMW();
 
       const requestData = {
         method: 'POST',

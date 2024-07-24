@@ -1,4 +1,11 @@
-import React, { useRef, forwardRef, useMemo } from 'react';
+import React, {
+  useRef,
+  forwardRef,
+  useMemo,
+  useEffect,
+  useImperativeHandle,
+  ForwardedRef
+} from 'react';
 import {
   Menu,
   MenuList,
@@ -15,20 +22,20 @@ import { ChevronDownIcon } from '@chakra-ui/icons';
 import { useLoading } from '../../../hooks/useLoading';
 import MyIcon from '../Icon';
 
-export type SelectProps = ButtonProps & {
-  value?: string | number;
+export type SelectProps<T = any> = ButtonProps & {
+  value?: T;
   placeholder?: string;
   list: {
     alias?: string;
     label: string | React.ReactNode;
     description?: string;
-    value: string | number;
+    value: T;
   }[];
   isLoading?: boolean;
-  onchange?: (val: any) => void;
+  onchange?: (val: T) => void;
 };
 
-const MySelect = (
+const MySelect = <T = any,>(
   {
     placeholder,
     value,
@@ -37,11 +44,12 @@ const MySelect = (
     onchange,
     isLoading = false,
     ...props
-  }: SelectProps,
-  selectRef: any
+  }: SelectProps<T>,
+  ref: ForwardedRef<{
+    focus: () => void;
+  }>
 ) => {
-  const ref = useRef<HTMLButtonElement>(null);
-  const { Loading } = useLoading();
+  const ButtonRef = useRef<HTMLButtonElement>(null);
   const menuItemStyles: MenuItemProps = {
     borderRadius: 'sm',
     py: 2,
@@ -56,6 +64,12 @@ const MySelect = (
   };
   const { isOpen, onOpen, onClose } = useDisclosure();
   const selectItem = useMemo(() => list.find((item) => item.value === value), [list, value]);
+
+  useImperativeHandle(ref, () => ({
+    focus() {
+      onOpen();
+    }
+  }));
 
   return (
     <Box
@@ -75,7 +89,7 @@ const MySelect = (
       >
         <MenuButton
           as={Button}
-          ref={ref}
+          ref={ButtonRef}
           width={width}
           px={3}
           rightIcon={<ChevronDownIcon />}
@@ -101,7 +115,7 @@ const MySelect = (
         <MenuList
           className={props.className}
           minW={(() => {
-            const w = ref.current?.clientWidth;
+            const w = ButtonRef.current?.clientWidth;
             if (w) {
               return `${w}px !important`;
             }
@@ -120,9 +134,9 @@ const MySelect = (
           maxH={'40vh'}
           overflowY={'auto'}
         >
-          {list.map((item) => (
+          {list.map((item, i) => (
             <MenuItem
-              key={item.value}
+              key={i}
               {...menuItemStyles}
               {...(value === item.value
                 ? {
@@ -155,4 +169,6 @@ const MySelect = (
   );
 };
 
-export default React.memo(forwardRef(MySelect));
+export default forwardRef(MySelect) as <T>(
+  props: SelectProps<T> & { ref?: React.Ref<HTMLSelectElement> }
+) => JSX.Element;

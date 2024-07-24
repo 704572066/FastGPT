@@ -40,7 +40,7 @@ const SelectOneResource = ({
       id: rootId,
       open: true,
       avatar: FolderImgUrl,
-      name: t('common.folder.Root Path'),
+      name: t('common:common.folder.Root Path'),
       isFolder: true,
       children: dataList
     };
@@ -155,7 +155,7 @@ const SelectOneResource = ({
   return loading ? (
     <Loading fixed={false} />
   ) : (
-    <Box maxH={maxH} overflow={'auto'}>
+    <Box maxH={maxH} h={'100%'} overflow={'auto'}>
       <Render list={concatRoot} />
     </Box>
   );

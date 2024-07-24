@@ -1,7 +1,5 @@
-import type { NextApiResponse } from 'next';
 import { MongoApp } from '@fastgpt/service/core/app/schema';
 import { AppListItemType } from '@fastgpt/global/core/app/type';
-import { authUserPer } from '@fastgpt/service/support/permission/user/auth';
 import { NextAPI } from '@/service/middleware/entry';
 import { MongoResourcePermission } from '@fastgpt/service/support/permission/schema';
 import {
@@ -12,8 +10,11 @@ import { AppPermission } from '@fastgpt/global/support/permission/app/controller
 import { ApiRequestProps } from '@fastgpt/service/type/next';
 import { ParentIdType } from '@fastgpt/global/common/parentFolder/type';
 import { parseParentIdInMongo } from '@fastgpt/global/common/parentFolder/utils';
-import { AppTypeEnum } from '@fastgpt/global/core/app/constants';
+import { AppFolderTypeList, AppTypeEnum } from '@fastgpt/global/core/app/constants';
 import { AppDefaultPermissionVal } from '@fastgpt/global/support/permission/app/constant';
+import { authApp } from '@fastgpt/service/support/permission/app/auth';
+import { authUserPer } from '@fastgpt/service/support/permission/user/auth';
+import { replaceRegChars } from '@fastgpt/global/common/string/tools';
 
 export type ListAppBody = {
   parentId?: ParentIdType;
@@ -22,29 +23,41 @@ export type ListAppBody = {
   searchKey?: string;
 };
 
-async function handler(
-  req: ApiRequestProps<ListAppBody>,
-  res: NextApiResponse<any>
-): Promise<AppListItemType[]> {
+async function handler(req: ApiRequestProps<ListAppBody>): Promise<AppListItemType[]> {
+  const { parentId, type, getRecentlyChat, searchKey } = req.body;
+
   // 凭证校验
   const {
-    teamId,
+    app: ParentApp,
     tmbId,
+    teamId,
     permission: tmbPer
-  } = await authUserPer({
-    req,
-    authToken: true,
-    per: ReadPermissionVal
-  });
-
-  const { parentId, type, getRecentlyChat, searchKey } = req.body;
+  } = await (async () => {
+    if (parentId) {
+      return await authApp({
+        req,
+        authToken: true,
+        appId: parentId,
+        per: ReadPermissionVal
+      });
+    } else {
+      return {
+        ...(await authUserPer({
+          req,
+          authToken: true,
+          per: ReadPermissionVal
+        })),
+        app: undefined
+      };
+    }
+  })();
 
   const findAppsQuery = (() => {
     const searchMatch = searchKey
       ? {
           $or: [
-            { name: { $regex: searchKey, $options: 'i' } },
-            { intro: { $regex: searchKey, $options: 'i' } }
+            { name: { $regex: new RegExp(`${replaceRegChars(searchKey)}`, 'i') } },
+            { intro: { $regex: new RegExp(`${replaceRegChars(searchKey)}`, 'i') } }
           ]
         }
       : {};
@@ -53,7 +66,14 @@ async function handler(
       return {
         // get all chat app
         teamId,
-        type: { $in: [AppTypeEnum.workflow, AppTypeEnum.simple] },
+        type: { $in: [AppTypeEnum.workflow, AppTypeEnum.simple, AppTypeEnum.plugin] },
+        ...searchMatch
+      };
+    }
+
+    if (searchKey) {
+      return {
+        teamId,
         ...searchMatch
       };
     }
@@ -62,8 +82,7 @@ async function handler(
       teamId,
       ...(type && Array.isArray(type) && { type: { $in: type } }),
       ...(type && { type }),
-      ...parseParentIdInMongo(parentId),
-      ...searchMatch
+      ...parseParentIdInMongo(parentId)
     };
   })();
 
@@ -71,7 +90,7 @@ async function handler(
   const [myApps, rpList] = await Promise.all([
     MongoApp.find(
       findAppsQuery,
-      '_id avatar type name intro tmbId updateTime pluginData defaultPermission'
+      '_id parentId avatar type name intro tmbId updateTime pluginData defaultPermission inheritPermission'
     )
       .sort({
         updateTime: -1
@@ -87,11 +106,29 @@ async function handler(
 
   const filterApps = myApps
     .map((app) => {
-      const perVal = rpList.find((item) => String(item.resourceId) === String(app._id))?.permission;
-      const Per = new AppPermission({
-        per: perVal ?? app.defaultPermission,
-        isOwner: String(app.tmbId) === tmbId || tmbPer.isOwner
-      });
+      const Per = (() => {
+        // Inherit app
+        if (app.inheritPermission && ParentApp && !AppFolderTypeList.includes(app.type)) {
+          // get its parent's permission as its permission
+          app.defaultPermission = ParentApp.defaultPermission;
+          const perVal = rpList.find(
+            (item) => String(item.resourceId) === String(ParentApp._id)
+          )?.permission;
+
+          return new AppPermission({
+            per: perVal ?? app.defaultPermission,
+            isOwner: String(app.tmbId) === String(tmbId) || tmbPer.isOwner
+          });
+        } else {
+          const perVal = rpList.find(
+            (item) => String(item.resourceId) === String(app._id)
+          )?.permission;
+          return new AppPermission({
+            per: perVal ?? app.defaultPermission,
+            isOwner: String(app.tmbId) === String(tmbId) || tmbPer.isOwner
+          });
+        }
+      })();
 
       return {
         ...app,
@@ -112,7 +149,8 @@ async function handler(
     updateTime: app.updateTime,
     permission: app.permission,
     defaultPermission: app.defaultPermission || AppDefaultPermissionVal,
-    pluginData: app.pluginData
+    pluginData: app.pluginData,
+    inheritPermission: app.inheritPermission ?? true
   }));
 }
 

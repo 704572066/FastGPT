@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Box, Grid, Flex, IconButton, HStack } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
-import { delAppById, putAppById } from '@/web/core/app/api';
+import { delAppById, putAppById, resumeInheritPer } from '@/web/core/app/api';
 import { useConfirm } from '@fastgpt/web/hooks/useConfirm';
 import MyIcon from '@fastgpt/web/components/common/Icon';
 import Avatar from '@/components/Avatar';
@@ -13,7 +13,7 @@ import MyBox from '@fastgpt/web/components/common/MyBox';
 import { useRequest2 } from '@fastgpt/web/hooks/useRequest';
 import { useContextSelector } from 'use-context-selector';
 import { AppListContext } from './context';
-import { AppTypeEnum } from '@fastgpt/global/core/app/constants';
+import { AppFolderTypeList, AppTypeEnum } from '@fastgpt/global/core/app/constants';
 import { useFolderDrag } from '@/components/common/folder/useFolderDrag';
 import dynamic from 'next/dynamic';
 import type { EditResourceInfoFormType } from '@/components/common/Modal/EditResourceModal';
@@ -43,12 +43,15 @@ const HttpEditModal = dynamic(() => import('./HttpPluginEditModal'));
 
 const ListItem = () => {
   const { t } = useTranslation();
-  const { appT } = useI18n();
+  const { appT, commonT } = useI18n();
   const router = useRouter();
+  const { parentId = null } = router.query;
   const { isPc } = useSystem();
 
-  const { myApps, loadMyApps, onUpdateApp, setMoveAppId, folderDetail, appType } =
-    useContextSelector(AppListContext, (v) => v);
+  const { myApps, loadMyApps, onUpdateApp, setMoveAppId, folderDetail } = useContextSelector(
+    AppListContext,
+    (v) => v
+  );
   const [loadingAppId, setLoadingAppId] = useState<string>();
 
   const [editedApp, setEditedApp] = useState<EditResourceInfoFormType>();
@@ -86,8 +89,8 @@ const ListItem = () => {
       onSuccess() {
         loadMyApps();
       },
-      successToast: t('common.Delete Success'),
-      errorToast: t('common.Delete Failed')
+      successToast: t('common:common.Delete Success'),
+      errorToast: t('common:common.Delete Failed')
     }
   );
 
@@ -106,17 +109,28 @@ const ListItem = () => {
     manual: !feConfigs.isPlus
   });
 
+  const { runAsync: onResumeInheritPermission } = useRequest2(
+    () => {
+      return resumeInheritPer(editPerApp!._id);
+    },
+    {
+      manual: true,
+      errorToast: commonT('permission.Resume InheritPermission Failed'),
+      onSuccess() {
+        loadMyApps();
+      }
+    }
+  );
+
   return (
     <>
       <Grid
         py={4}
-        gridTemplateColumns={[
-          '1fr',
-          'repeat(2,1fr)',
-          'repeat(3,1fr)',
-          'repeat(3,1fr)',
-          'repeat(4,1fr)'
-        ]}
+        gridTemplateColumns={
+          folderDetail
+            ? ['1fr', 'repeat(2,1fr)', 'repeat(2,1fr)', 'repeat(3,1fr)']
+            : ['1fr', 'repeat(2,1fr)', 'repeat(3,1fr)', 'repeat(3,1fr)', 'repeat(4,1fr)']
+        }
         gridGap={5}
         alignItems={'stretch'}
       >
@@ -128,7 +142,7 @@ const ListItem = () => {
               h="100%"
               label={
                 app.type === AppTypeEnum.folder
-                  ? t('common.folder.Open folder')
+                  ? t('common:common.folder.Open folder')
                   : app.permission.hasWritePer
                     ? appT('Edit app')
                     : appT('Go to chat')
@@ -146,7 +160,6 @@ const ListItem = () => {
                 boxShadow={'2'}
                 bg={'white'}
                 borderRadius={'lg'}
-                userSelect={'none'}
                 position={'relative'}
                 display={'flex'}
                 flexDirection={'column'}
@@ -161,7 +174,7 @@ const ListItem = () => {
                   }
                 }}
                 onClick={() => {
-                  if (app.type === AppTypeEnum.folder || app.type === AppTypeEnum.httpPlugin) {
+                  if (AppFolderTypeList.includes(app.type)) {
                     router.push({
                       query: {
                         ...router.query,
@@ -243,6 +256,36 @@ const ListItem = () => {
                             />
                           }
                           menuList={[
+                            ...([AppTypeEnum.simple, AppTypeEnum.workflow].includes(app.type)
+                              ? [
+                                  {
+                                    children: [
+                                      {
+                                        icon: 'core/chat/chatLight',
+                                        label: appT('Go to chat'),
+                                        onClick: () => {
+                                          router.push(`/chat?appId=${app._id}`);
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              : []),
+                            ...([AppTypeEnum.plugin].includes(app.type)
+                              ? [
+                                  {
+                                    children: [
+                                      {
+                                        icon: 'core/chat/chatLight',
+                                        label: appT('Go to run'),
+                                        onClick: () => {
+                                          router.push(`/chat?appId=${app._id}`);
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              : []),
                             {
                               children: [
                                 {
@@ -272,7 +315,7 @@ const ListItem = () => {
                                   : [
                                       {
                                         icon: 'common/file/move',
-                                        label: t('common.folder.Move to'),
+                                        label: t('common:common.folder.Move to'),
                                         onClick: () => setMoveAppId(app._id)
                                       }
                                     ]),
@@ -280,38 +323,28 @@ const ListItem = () => {
                                   ? [
                                       {
                                         icon: 'support/team/key',
-                                        label: t('permission.Permission'),
+                                        label: t('common:permission.Permission'),
                                         onClick: () => setEditPerAppIndex(index)
                                       }
                                     ]
                                   : [])
                               ]
                             },
-                            {
-                              children: [
-                                {
-                                  icon: 'copy',
-                                  label: appT('Copy one app'),
-                                  onClick: () =>
-                                    openConfirmCopy(() => onclickCopy({ appId: app._id }))()
-                                }
-                              ]
-                            },
-                            ...([AppTypeEnum.simple, AppTypeEnum.workflow].includes(app.type)
-                              ? [
+                            ...(AppFolderTypeList.includes(app.type)
+                              ? []
+                              : [
                                   {
                                     children: [
                                       {
-                                        icon: 'core/chat/chatLight',
-                                        label: appT('Go to chat'),
-                                        onClick: () => {
-                                          router.push(`/chat?appId=${app._id}`);
-                                        }
+                                        icon: 'copy',
+                                        label: appT('Copy one app'),
+                                        onClick: () =>
+                                          openConfirmCopy(() => onclickCopy({ appId: app._id }))()
                                       }
                                     ]
                                   }
-                                ]
-                              : []),
+                                ]),
+
                             ...(app.permission.isOwner
                               ? [
                                   {
@@ -319,7 +352,7 @@ const ListItem = () => {
                                       {
                                         type: 'danger' as 'danger',
                                         icon: 'delete',
-                                        label: t('common.Delete'),
+                                        label: t('common:common.Delete'),
                                         onClick: () =>
                                           openConfirmDel(
                                             () => onclickDelApp(app._id),
@@ -361,6 +394,10 @@ const ListItem = () => {
       )}
       {!!editPerApp && (
         <ConfigPerModal
+          refetchResource={loadMyApps}
+          hasParent={Boolean(parentId)}
+          resumeInheritPermission={onResumeInheritPermission}
+          isInheritPermission={editPerApp.inheritPermission}
           avatar={editPerApp.avatar}
           name={editPerApp.name}
           defaultPer={{
@@ -391,7 +428,8 @@ const ListItem = () => {
               deleteAppCollaborators({
                 appId: editPerApp._id,
                 tmbId
-              })
+              }),
+            refreshDeps: [editPerApp.inheritPermission]
           }}
           onClose={() => setEditPerAppIndex(undefined)}
         />

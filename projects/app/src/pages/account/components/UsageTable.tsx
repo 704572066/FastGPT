@@ -31,6 +31,7 @@ import Avatar from '@/components/Avatar';
 import MySelect from '@fastgpt/web/components/common/MySelect';
 import { formatNumber } from '@fastgpt/global/common/math/tools';
 import EmptyTip from '@fastgpt/web/components/common/EmptyTip';
+import { useSystem } from '@fastgpt/web/hooks/useSystem';
 const UsageDetail = dynamic(() => import('./UsageDetail'));
 
 const UsageTable = () => {
@@ -40,19 +41,23 @@ const UsageTable = () => {
     from: addDays(new Date(), -7),
     to: new Date()
   });
-  const [usageSource, setUsageSource] = useState<`${UsageSourceEnum}` | ''>('');
-  const { isPc } = useSystemStore();
+  const [usageSource, setUsageSource] = useState<UsageSourceEnum | ''>('');
+  const { isPc } = useSystem();
   const { userInfo } = useUserStore();
   const [usageDetail, setUsageDetail] = useState<UsageItemType>();
 
   const sourceList = useMemo(
-    () => [
-      { label: t('common.All'), value: '' },
-      ...Object.entries(UsageSourceMap).map(([key, value]) => ({
-        label: t(value.label),
-        value: key
-      }))
-    ],
+    () =>
+      [
+        { label: t('common:common.All'), value: '' },
+        ...Object.entries(UsageSourceMap).map(([key, value]) => ({
+          label: t(value.label as any),
+          value: key
+        }))
+      ] as {
+        label: never;
+        value: UsageSourceEnum | '';
+      }[],
     [t]
   );
 
@@ -108,7 +113,7 @@ const UsageTable = () => {
         {tmbList.length > 1 && userInfo?.team?.permission.hasWritePer && (
           <Flex alignItems={'center'}>
             <Box mr={2} flexShrink={0}>
-              {t('support.user.team.member')}
+              {t('common:support.user.team.member')}
             </Box>
             <MySelect
               size={'sm'}
@@ -141,10 +146,10 @@ const UsageTable = () => {
         <Table>
           <Thead>
             <Tr>
-              {/* <Th>{t('user.team.Member Name')}</Th> */}
-              <Th>{t('user.Time')}</Th>
+              {/* <Th>{t('common:user.team.Member Name')}</Th> */}
+              <Th>{t('common:user.Time')}</Th>
               <Th>
-                <MySelect
+                <MySelect<UsageSourceEnum | ''>
                   list={sourceList}
                   value={usageSource}
                   size={'sm'}
@@ -154,8 +159,8 @@ const UsageTable = () => {
                   w={'130px'}
                 ></MySelect>
               </Th>
-              <Th>{t('user.Application Name')}</Th>
-              <Th>{t('support.wallet.usage.Total points')}</Th>
+              <Th>{t('common:user.Application Name')}</Th>
+              <Th>{t('common:support.wallet.usage.Total points')}</Th>
               <Th></Th>
             </Tr>
           </Thead>
@@ -164,8 +169,8 @@ const UsageTable = () => {
               <Tr key={item.id}>
                 {/* <Td>{item.memberName}</Td> */}
                 <Td>{dayjs(item.time).format('YYYY/MM/DD HH:mm:ss')}</Td>
-                <Td>{t(UsageSourceMap[item.source]?.label) || '-'}</Td>
-                <Td>{t(item.appName) || '-'}</Td>
+                <Td>{t(UsageSourceMap[item.source]?.label as any) || '-'}</Td>
+                <Td>{t(item.appName as any) || '-'}</Td>
                 <Td>{formatNumber(item.totalPoints) || 0}</Td>
                 <Td>
                   <Button size={'sm'} variant={'whitePrimary'} onClick={() => setUsageDetail(item)}>

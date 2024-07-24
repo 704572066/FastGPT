@@ -3,7 +3,7 @@ import { getNanoid } from '@fastgpt/global/common/string/tools';
 import { useCopyData } from '@/web/common/hooks/useCopyData';
 import { useTranslation } from 'next-i18next';
 import { Node } from 'reactflow';
-import { FlowNodeItemType } from '@fastgpt/global/core/workflow/type';
+import { FlowNodeItemType } from '@fastgpt/global/core/workflow/type/node';
 import { useContextSelector } from 'use-context-selector';
 import { WorkflowContext, getWorkflowStore } from '../../context';
 import { useWorkflowUtils } from './useUtils';
@@ -37,7 +37,7 @@ export const useKeyboard = () => {
       (node) => node.selected && !node.data?.isError && node.data?.unique !== true
     );
     if (selectedNodes.length === 0) return;
-    copyData(JSON.stringify(selectedNodes), t('core.workflow.Copy node'));
+    copyData(JSON.stringify(selectedNodes), t('common:core.workflow.Copy node'));
   }, [copyData, hasInputtingElement, t]);
 
   const onParse = useCallback(async () => {

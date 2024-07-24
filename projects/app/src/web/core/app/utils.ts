@@ -4,7 +4,7 @@ import {
   AppSchema,
   AppSimpleEditFormType
 } from '@fastgpt/global/core/app/type';
-import { StoreNodeItemType } from '@fastgpt/global/core/workflow/type/index.d';
+import { StoreNodeItemType } from '@fastgpt/global/core/workflow/type/node.d';
 import {
   FlowNodeInputTypeEnum,
   FlowNodeOutputTypeEnum,
@@ -602,7 +602,7 @@ export function form2AppWorkflow(data: AppSimpleEditFormType): WorkflowType & {
       nodes: [
         {
           nodeId: toolNodeId,
-          name: '工具调用（实验）',
+          name: '工具调用',
           intro: '通过AI模型自动选择一个或多个功能块进行调用，也可以对插件进行调用。',
           avatar: '/imgs/workflow/tool.svg',
           flowNodeType: FlowNodeTypeEnum.tools,
@@ -712,29 +712,29 @@ export const getSystemVariables = (t: TFunction): EditorVariablePickerType[] => 
   return [
     {
       key: 'appId',
-      label: t('core.module.http.AppId'),
+      label: t('common:core.module.http.AppId'),
       required: true,
       valueType: WorkflowIOValueTypeEnum.string
     },
     {
       key: 'chatId',
-      label: t('core.module.http.ChatId'),
+      label: t('common:core.module.http.ChatId'),
       valueType: WorkflowIOValueTypeEnum.string
     },
     {
       key: 'responseChatItemId',
-      label: t('core.module.http.ResponseChatItemId'),
+      label: t('common:core.module.http.ResponseChatItemId'),
       valueType: WorkflowIOValueTypeEnum.string
     },
     {
       key: 'histories',
-      label: t('core.module.http.Histories'),
+      label: t('common:core.module.http.Histories'),
       required: true,
       valueType: WorkflowIOValueTypeEnum.chatHistory
     },
     {
       key: 'cTime',
-      label: t('core.module.http.Current time'),
+      label: t('common:core.module.http.Current time'),
       required: true,
       valueType: WorkflowIOValueTypeEnum.string
     }

@@ -21,6 +21,7 @@ import { compareWorkflow } from '@/web/core/workflow/utils';
 import MyTag from '@fastgpt/web/components/common/Tag/index';
 import { publishStatusStyle } from '../constants';
 import MyTooltip from '@fastgpt/web/components/common/MyTooltip';
+import { useSystem } from '@fastgpt/web/hooks/useSystem';
 
 const Header = ({
   appForm,
@@ -30,7 +31,7 @@ const Header = ({
   setAppForm: React.Dispatch<React.SetStateAction<AppSimpleEditFormType>>;
 }) => {
   const { t } = useTranslation();
-  const { isPc } = useSystemStore();
+  const { isPc } = useSystem();
   const router = useRouter();
   const { appId, appDetail, onPublish, currentTab } = useContextSelector(AppContext, (v) => v);
 
@@ -89,7 +90,7 @@ const Header = ({
           <RouteTab />
         </Flex>
       )}
-      <Flex pl={2} pt={[2, 3]} alignItems={'flex-start'} position={'relative'}>
+      <Flex pt={[2, 3]} alignItems={'flex-start'} position={'relative'}>
         <Box flex={'1'}>
           <FolderPath paths={paths} hoverStyle={{ color: 'primary.600' }} onClick={onclickRoute} />
         </Box>
@@ -102,20 +103,23 @@ const Header = ({
           <Flex alignItems={'center'}>
             {!historiesDefaultData && (
               <>
-                <MyTag
-                  mr={3}
-                  type={'borderFill'}
-                  showDot
-                  colorSchema={
-                    isPublished
-                      ? publishStatusStyle.published.colorSchema
-                      : publishStatusStyle.unPublish.colorSchema
-                  }
-                >
-                  {isPublished
-                    ? publishStatusStyle.published.text
-                    : publishStatusStyle.unPublish.text}
-                </MyTag>
+                {isPc && (
+                  <MyTag
+                    mr={3}
+                    type={'borderFill'}
+                    showDot
+                    colorSchema={
+                      isPublished
+                        ? publishStatusStyle.published.colorSchema
+                        : publishStatusStyle.unPublish.colorSchema
+                    }
+                  >
+                    {isPublished
+                      ? publishStatusStyle.published.text
+                      : publishStatusStyle.unPublish.text}
+                  </MyTag>
+                )}
+
                 <IconButton
                   mr={[2, 4]}
                   icon={<MyIcon name={'history'} w={'18px'} />}
@@ -134,11 +138,11 @@ const Header = ({
                 />
                 <PopoverConfirm
                   showCancel
-                  content={t('core.app.Publish Confirm')}
+                  content={t('common:core.app.Publish Confirm')}
                   Trigger={
                     <Box>
-                      <MyTooltip label={t('core.app.Publish app tip')}>
-                        <Button isDisabled={isPublished}>{t('core.app.Publish')}</Button>
+                      <MyTooltip label={t('common:core.app.Publish app tip')}>
+                        <Button isDisabled={isPublished}>{t('common:core.app.Publish')}</Button>
                       </MyTooltip>
                     </Box>
                   }

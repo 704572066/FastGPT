@@ -1,7 +1,7 @@
 import { ChatCompletionRequestMessageRoleEnum } from '../../ai/constants';
 import { NodeInputKeyEnum, NodeOutputKeyEnum } from '../constants';
 import { FlowNodeTypeEnum } from '../node/constant';
-import { StoreNodeItemType } from '../type';
+import { StoreNodeItemType } from '../type/node';
 import { StoreEdgeItemType } from '../type/edge';
 import { RuntimeEdgeItemType, RuntimeNodeItemType } from './type';
 import { VARIABLE_NODE_ID } from '../constants';
@@ -123,6 +123,7 @@ export const checkNodeRunStatus = ({
     (item) => item.target === node.nodeId
   );
 
+  // Entry
   if (workflowEdges.length === 0) {
     return 'run';
   }

@@ -1,6 +1,6 @@
 import { LLMModelItemType } from '@fastgpt/global/core/ai/model.d';
 import { getAIApi } from '../../../../ai/config';
-import { filterGPTMessageByMaxTokens } from '../../../../chat/utils';
+import { filterGPTMessageByMaxTokens, loadRequestMessages } from '../../../../chat/utils';
 import {
   ChatCompletion,
   ChatCompletionMessageToolCall,
@@ -99,6 +99,8 @@ export const runToolWithToolChoice = async (
     }
     return item;
   });
+  const requestMessages = await loadRequestMessages(formativeMessages);
+
   // console.log(
   //   JSON.stringify(
   //     {
@@ -106,7 +108,7 @@ export const runToolWithToolChoice = async (
   //       model: toolModel.model,
   //       temperature: 0,
   //       stream,
-  //       messages: formativeMessages,
+  //       messages: requestMessages,
   //       tools,
   //       tool_choice: 'auto'
   //     },
@@ -124,7 +126,7 @@ export const runToolWithToolChoice = async (
       model: toolModel.model,
       temperature: 0,
       stream,
-      messages: formativeMessages,
+      messages: requestMessages,
       tools,
       tool_choice: 'auto'
     },
@@ -377,31 +379,41 @@ async function streamResponse({
           if (toolCall.function?.arguments === undefined) {
             toolCall.function.arguments = '';
           }
-          toolCalls.push({
-            ...toolCall,
-            toolName: toolNode.name,
-            toolAvatar: toolNode.avatar
-          });
 
-          if (detail) {
-            responseWrite({
-              write,
-              event: SseResponseEventEnum.toolCall,
-              data: JSON.stringify({
-                tool: {
-                  id: toolCall.id,
-                  toolName: toolNode.name,
-                  toolAvatar: toolNode.avatar,
-                  functionName: toolCall.function.name,
-                  params: toolCall.function.arguments,
-                  response: ''
-                }
-              })
+          // Get last tool call
+          const lastToolCall = toolCalls[toolCalls.length - 1];
+
+          // new tool
+          if (lastToolCall?.id !== toolCall.id) {
+            toolCalls.push({
+              ...toolCall,
+              toolName: toolNode.name,
+              toolAvatar: toolNode.avatar
             });
-          }
-        }
 
-        continue;
+            if (detail) {
+              responseWrite({
+                write,
+                event: SseResponseEventEnum.toolCall,
+                data: JSON.stringify({
+                  tool: {
+                    id: toolCall.id,
+                    toolName: toolNode.name,
+                    toolAvatar: toolNode.avatar,
+                    functionName: toolCall.function.name,
+                    params: toolCall.function.arguments,
+                    response: ''
+                  }
+                })
+              });
+            }
+
+            continue;
+          }
+          // last tool, update params
+        } else {
+          continue;
+        }
       }
 
       /* arg 插入最后一个工具的参数里 */

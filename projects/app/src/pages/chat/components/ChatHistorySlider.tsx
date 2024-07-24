@@ -23,6 +23,7 @@ import { AppTypeEnum } from '@fastgpt/global/core/app/constants';
 import { useContextSelector } from 'use-context-selector';
 import { ChatContext } from '@/web/core/chat/context/chatContext';
 import MyBox from '@fastgpt/web/components/common/MyBox';
+import { useSystem } from '@fastgpt/web/hooks/useSystem';
 
 type HistoryItemType = {
   id: string;
@@ -65,7 +66,7 @@ const ChatHistorySlider = ({
   const { t } = useTranslation();
   const { appT } = useI18n();
 
-  const { isPc } = useSystemStore();
+  const { isPc } = useSystem();
   const { userInfo } = useUserStore();
 
   const [currentTab, setCurrentTab] = useState<TabEnum>(TabEnum.history);
@@ -85,18 +86,16 @@ const ChatHistorySlider = ({
       customTitle: item.customTitle,
       top: item.top
     }));
-    const newChat: HistoryItemType = { id: activeChatId, title: t('core.chat.New Chat') };
+    const newChat: HistoryItemType = { id: activeChatId, title: t('common:core.chat.New Chat') };
     const activeChat = histories.find((item) => item.chatId === activeChatId);
 
     return !activeChat ? [newChat].concat(formatHistories) : formatHistories;
   }, [activeChatId, histories, t]);
 
-  const showApps = apps?.length > 0;
-
   // custom title edit
   const { onOpenModal, EditModal: EditTitleModal } = useEditTitle({
-    title: t('core.chat.Custom History Title'),
-    placeholder: t('core.chat.Custom History Title Description')
+    title: t('common:core.chat.Custom History Title'),
+    placeholder: t('common:core.chat.Custom History Title Description')
   });
   const { openConfirm, ConfirmModal } = useConfirm({
     content: confirmClearText
@@ -140,7 +139,7 @@ const ChatHistorySlider = ({
             fontSize={'sm'}
             onClick={() =>
               canRouteToDetail &&
-              router.replace({
+              router.push({
                 pathname: '/app/detail',
                 query: { appId }
               })
@@ -164,17 +163,22 @@ const ChatHistorySlider = ({
               px: 1
             }}
             list={[
-              { label: t('core.chat.Recent use'), value: TabEnum.recently },
-              ...(!isTeamChat ? [{ label: t('App'), value: TabEnum.app }] : []),
-              { label: t('core.chat.History'), value: TabEnum.history }
+              ...(isTeamChat
+                ? [{ label: t('common:App'), value: TabEnum.recently }]
+                : [
+                    { label: t('common:core.chat.Recent use'), value: TabEnum.recently },
+                    { label: t('common:App'), value: TabEnum.app }
+                  ]),
+              { label: t('common:core.chat.History'), value: TabEnum.history }
             ]}
             value={currentTab}
             onChange={setCurrentTab}
           />
         )}
+
         <Button
           variant={'whitePrimary'}
-          flex={['0 0 auto', 1]}
+          flex={[appId ? '0 0 auto' : 1, 1]}
           h={'100%'}
           color={'primary.600'}
           borderRadius={'xl'}
@@ -182,10 +186,10 @@ const ChatHistorySlider = ({
           overflow={'hidden'}
           onClick={() => onChangeChatId()}
         >
-          {t('core.chat.New Chat')}
+          {t('common:core.chat.New Chat')}
         </Button>
-
-        {(isPc || !showApps) && (
+        {/* Clear */}
+        {isPc && (
           <IconButton
             ml={3}
             h={'100%'}
@@ -262,7 +266,9 @@ const ChatHistorySlider = ({
                             ...(onSetHistoryTop
                               ? [
                                   {
-                                    label: item.top ? t('core.chat.Unpin') : t('core.chat.Pin'),
+                                    label: item.top
+                                      ? t('common:core.chat.Unpin')
+                                      : t('common:core.chat.Pin'),
                                     icon: 'core/chat/setTopLight',
                                     onClick: () => {
                                       onSetHistoryTop({ chatId: item.id, top: !item.top });
@@ -273,7 +279,7 @@ const ChatHistorySlider = ({
                             ...(onSetCustomTitle
                               ? [
                                   {
-                                    label: t('common.Custom Title'),
+                                    label: t('common:common.Custom Title'),
                                     icon: 'common/customTitleLight',
                                     onClick: () => {
                                       onOpenModal({
@@ -289,7 +295,7 @@ const ChatHistorySlider = ({
                                 ]
                               : []),
                             {
-                              label: t('common.Delete'),
+                              label: t('common:common.Delete'),
                               icon: 'delete',
                               onClick: () => {
                                 onDelHistory({ chatId: item.id });
@@ -370,7 +376,7 @@ const ChatHistorySlider = ({
             borderRadius={'50%'}
             aria-label={''}
           />
-          {t('core.chat.Exit Chat')}
+          {t('common:core.chat.Exit Chat')}
         </Flex>
       )}
       <EditTitleModal />

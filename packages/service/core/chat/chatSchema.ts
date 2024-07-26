@@ -8,7 +8,7 @@ import {
 } from '@fastgpt/global/support/user/team/constant';
 import { AppCollectionName } from '../app/schema';
 
-export const chatCollectionName = 'chat';
+export const chatCollectionName = 'chats';
 
 const ChatSchema = new Schema({
   chatId: {

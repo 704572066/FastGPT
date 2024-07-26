@@ -14,6 +14,7 @@ import { MongoChatItem } from '@fastgpt/service/core/chat/chatItemSchema';
 import { MongoDatasetTraining } from '@fastgpt/service/core/dataset/training/schema';
 import { MongoTeamMember } from '@fastgpt/service/support/user/team/teamMemberSchema';
 import { TeamMemberRoleEnum } from '@fastgpt/global/support/user/team/constant';
+import { MongoResourcePermission } from '@fastgpt/service/support/permission/schema';
 /*  */
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -133,7 +134,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
         { session }
       );
-      // bills outlinks
+      // 删除resource_permission
+      await MongoResourcePermission.deleteMany(
+        {
+          tmbId: tmbId
+        },
+        { session }
+      );
 
       // 移除团队成员
       const member = await MongoTeamMember.findOne(

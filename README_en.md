@@ -31,7 +31,7 @@ FastGPT is a knowledge-based platform built on the LLMs, offers a comprehensive 
 
 <div align="center">
 
-  [![discord](https://theme.zdassets.com/theme_assets/678183/cc59daa07820943e943c2fc283b9079d7003ff76.svg)](https://discord.gg/mp68xkZn2Q)
+[![discord](https://theme.zdassets.com/theme_assets/678183/cc59daa07820943e943c2fc283b9079d7003ff76.svg)](https://discord.gg/mp68xkZn2Q)
   
 </div>
 

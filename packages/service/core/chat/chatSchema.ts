@@ -1,5 +1,5 @@
-import { connectionMongo, getMongoModel, type Model } from '../../common/mongo';
-const { Schema, model, models } = connectionMongo;
+import { connectionMongo, getMongoModel } from '../../common/mongo';
+const { Schema } = connectionMongo;
 import { ChatSchema as ChatType } from '@fastgpt/global/core/chat/type.d';
 import { ChatSourceMap } from '@fastgpt/global/core/chat/constants';
 import {
@@ -8,7 +8,7 @@ import {
 } from '@fastgpt/global/support/user/team/constant';
 import { AppCollectionName } from '../app/schema';
 
-export const chatCollectionName = 'chats';
+export const chatCollectionName = 'chat';
 
 const ChatSchema = new Schema({
   chatId: {

@@ -14,42 +14,15 @@ import { MongoChatItem } from '@fastgpt/service/core/chat/chatItemSchema';
 import { MongoDatasetTraining } from '@fastgpt/service/core/dataset/training/schema';
 import { MongoTeamMember } from '@fastgpt/service/support/user/team/teamMemberSchema';
 import { TeamMemberRoleEnum } from '@fastgpt/global/support/user/team/constant';
-import { DatasetCollaboratorDeleteParams } from '@fastgpt/global/core/dataset/collaborator';
-import { MongoResourcePermission } from '@fastgpt/service/support/permission/schema';
 /*  */
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    await connectToDatabase();
-
-    const { datasetId, tmbId } = req.query as DatasetCollaboratorDeleteParams;
-
-    if (!tmbId || !datasetId) {
-      throw new Error('参数错误');
-    }
-
-    // 凭证校验
-    // await authApp({ req, authToken: true, appId, per: 'owner' });
-    const { teamId } = await authCert({ req, authToken: true });
-
-    // 移除协作者
-    const collaborator = await MongoResourcePermission.findOne(
-      {
-        tmbId: tmbId,
-        resourceId: datasetId
-      },
-      '_id'
-    );
-
-    if (!collaborator) {
-      throw new Error('找不到该协作者');
-    }
-
-    await MongoResourcePermission.deleteOne({
-      tmbId: tmbId,
-      resourceId: datasetId
-    });
-
-    jsonRes(res);
+    // throw new Error('功能还未实现');
+    const data = {
+      unReadCount: 0,
+      importantInforms: []
+    };
+    jsonRes(res, { data });
   } catch (err) {
     jsonRes(res, {
       code: 500,

@@ -28,7 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // 凭证校验
     // await authApp({ req, authToken: true, appId, per: 'owner' });
-    const { teamId } = await authCert({ req, authToken: true, per: 'owner' });
+    const { teamId } = await authCert({ req, authToken: true });
 
     await mongoSessionRun(async (session) => {
       // 转移知识库资源到创建者名下

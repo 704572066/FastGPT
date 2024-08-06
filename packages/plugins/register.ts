@@ -130,7 +130,7 @@ const getCommercialCb = async () => {
 };
 export const getSystemPluginCb = async () => {
   if (isProduction && global.systemPluginCb) return global.systemPluginCb;
-
+  const FastGPTProUrl = false;
   try {
     global.systemPluginCb = {};
     global.systemPluginCb = FastGPTProUrl ? await getCommercialCb() : await getCommunityCb();

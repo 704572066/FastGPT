@@ -25,7 +25,7 @@ import { QuestionOutlineIcon } from '@chakra-ui/icons';
 import MyTooltip from '@fastgpt/web/components/common/MyTooltip';
 import { useRequest2 } from '@fastgpt/web/hooks/useRequest';
 import { useWorkflowUtils } from '../../hooks/useUtils';
-import { ResponseBox } from '@/components/core/chat/components/WholeResponseModal';
+import { WholeResponseContent } from '@/components/core/chat/components/WholeResponseModal';
 
 type Props = FlowNodeItemType & {
   children?: React.ReactNode | React.ReactNode[] | string;
@@ -573,8 +573,8 @@ const NodeDebugResponse = React.memo(function NodeDebugResponse({
             top={0}
             zIndex={10}
             w={'420px'}
-            maxH={'100%'}
             minH={'300px'}
+            maxH={'100%'}
             border={'base'}
           >
             {/* Status header */}
@@ -614,7 +614,7 @@ const NodeDebugResponse = React.memo(function NodeDebugResponse({
               )}
             </Flex>
             {/* Show result */}
-            <Box maxH={'calc(100%-54px)'} overflow={'auto'}>
+            <Box overflowY={'auto'}>
               {!debugResult.message && !response && (
                 <EmptyTip text={t('common:core.workflow.debug.Not result')} pt={2} pb={5} />
               )}
@@ -623,7 +623,7 @@ const NodeDebugResponse = React.memo(function NodeDebugResponse({
                   {debugResult.message}
                 </Box>
               )}
-              {response && <ResponseBox response={[response]} showDetail hideTabs />}
+              {response && <WholeResponseContent activeModule={response} showDetail />}
             </Box>
           </Card>
         )}

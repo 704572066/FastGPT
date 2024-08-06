@@ -5,6 +5,7 @@ import { FastGPTProUrl } from '@fastgpt/service/common/system/constants';
 
 export function createUsage(data: CreateUsageProps) {
   if (!FastGPTProUrl) return;
+  // if (FastGPTProUrl) return;
   if (data.totalPoints === 0) {
     addLog.info('0 totalPoints', data);
   }
